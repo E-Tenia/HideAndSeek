@@ -3,9 +3,8 @@ package fr.redsifter.hideandseek.timer;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class Timer extends BukkitRunnable {
-	
-	//timer
-	//Oui oui
+
+	//test d'un commentaire
 	
 	private int timer;
 	@Override
@@ -15,9 +14,4 @@ public class Timer extends BukkitRunnable {
 		}
 
 	}
-	
-	private void enculay() {
-		System.out.println("lal");
-	}
-
 }

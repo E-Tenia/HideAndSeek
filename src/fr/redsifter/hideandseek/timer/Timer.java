@@ -4,6 +4,9 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 public class Timer extends BukkitRunnable {
 	
+	//timer
+	//Oui oui
+	
 	private int timer;
 	@Override
 	public void run() {
@@ -11,6 +14,10 @@ public class Timer extends BukkitRunnable {
 			cancel();
 		}
 
+	}
+	
+	private void enculay() {
+		System.out.println("lal");
 	}
 
 }

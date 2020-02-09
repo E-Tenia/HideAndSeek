@@ -3,10 +3,6 @@ package fr.redsifter.hideandseek.timer;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class Timer extends BukkitRunnable {
-
-	//test webhook
-	
-	//test 2 webhook
 	
 	private int timer;
 	@Override

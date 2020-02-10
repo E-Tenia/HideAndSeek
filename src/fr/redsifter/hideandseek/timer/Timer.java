@@ -10,7 +10,5 @@ public class Timer extends BukkitRunnable {
 		if(timer == 0) {
 			cancel();
 		}
-
 	}
-
 }

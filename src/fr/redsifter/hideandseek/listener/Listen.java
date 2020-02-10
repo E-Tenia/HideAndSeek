@@ -6,5 +6,4 @@ public class Listen implements Listener {
 	public void onTeamCreate() {
 		
 	}
-
 }

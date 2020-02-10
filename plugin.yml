@@ -8,4 +8,4 @@ commands:
     permission: test.use
   has:
     description: startgame, setgamelist, setgamewarp
-    permission: has.use
+    permission: hs.use

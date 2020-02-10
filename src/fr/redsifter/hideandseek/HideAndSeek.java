@@ -6,9 +6,9 @@ import fr.redsifter.hideandseek.commands.Commands;
 public class HideAndSeek extends JavaPlugin {
 	@Override
 	public void onEnable() {
-		System.out.println("Enabling HideAndSeek version 1.0");
+		System.out.println("Enabling HideAndSeek");
 		getCommand("test").setExecutor(new Commands());
-		getCommand("has").setExecutor(new Commands());
+		getCommand("hs").setExecutor(new Commands());
 	}
 	@Override
 	public void onDisable() {

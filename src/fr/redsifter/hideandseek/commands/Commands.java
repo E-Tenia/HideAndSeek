@@ -41,7 +41,7 @@ public class Commands implements CommandExecutor {
 		return false;
 		}
 		
-		else if (cmd.getName().equalsIgnoreCase("has")){
+		else if (cmd.getName().equalsIgnoreCase("hs")){
 			if(args.length > 0) {
 			switch(args[0]) {
 			case "startgame":

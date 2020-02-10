@@ -6,6 +6,6 @@ commands:
   test:
     description: ceci est une commande de test
     permission: test.use
-  has:
+  hs:
     description: startgame, setgamelist, setgamewarp
     permission: hs.use

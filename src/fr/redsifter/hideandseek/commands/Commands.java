@@ -48,6 +48,7 @@ public class Commands implements CommandExecutor {
 				sender.sendMessage("Not done yet...");
 				break;
 			case "setgamelist":
+				if (args.length > 1) {
 				int i = 0;
 				int j = 0;
 				int a = 0;
@@ -62,15 +63,15 @@ public class Commands implements CommandExecutor {
 				for(j = 0;j < i-1;j++) {
 					Player pl = Bukkit.getPlayerExact(gamelist[j]);
 					if (pl != null) {
-					if (j - a > (i/2)-1) {
-						sender.sendMessage("Inviting " + gamelist[j] + " as Hider !");
-						hiders[j - a] = gamelist[j];
-					}
-					else {
-						sender.sendMessage("Inviting " + gamelist[j] + " as Seeker !");
-						seekers[j - a] = gamelist[j];
-					}
-					pl.teleport(spawn);
+						if (j - a > (i/2)-1) {
+							sender.sendMessage("Inviting " + gamelist[j] + " as Hider !");
+							hiders[j - a] = gamelist[j];
+						}
+						else{
+							sender.sendMessage("Inviting " + gamelist[j] + " as Seeker !");
+							seekers[j - a] = gamelist[j];
+						}
+						pl.teleport(spawn);
 					}
 					else {
 						a++;
@@ -79,9 +80,13 @@ public class Commands implements CommandExecutor {
 				}
 				createTeam("seek",seekers);
 				createTeam("hide",hiders);
+				}
+				else {
+					sender.sendMessage("Precise players to invite");
+				}
 				break;
 			default:
-				sender.sendMessage("These players don't exist");
+				sender.sendMessage("Unknown command");
 				break;
 			}
 			}

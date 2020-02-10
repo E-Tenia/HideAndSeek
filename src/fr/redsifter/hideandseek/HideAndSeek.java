@@ -9,6 +9,7 @@ public class HideAndSeek extends JavaPlugin {
 		System.out.println("Enabling HideAndSeek");
 		getCommand("test").setExecutor(new Commands());
 		getCommand("hs").setExecutor(new Commands());
+		//oui
 	}
 	@Override
 	public void onDisable() {

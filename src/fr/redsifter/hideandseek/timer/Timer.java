@@ -5,7 +5,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 public class Timer extends BukkitRunnable {
 	
-	private int timer = 10;
+	public int timer = 10;
 	@Override
 	public void run() {
 		Bukkit.broadcastMessage("Temps restant : " + timer);

@@ -9,11 +9,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
-import fr.redsifter.hideandseek.channelmanager.ChannelManager;
 import fr.redsifter.hideandseek.timer.Timer;
 
 public class Commands implements CommandExecutor {
-	public ChannelManager cm = new ChannelManager();
 	
 	public static String[] purge(String[] list) {
 		

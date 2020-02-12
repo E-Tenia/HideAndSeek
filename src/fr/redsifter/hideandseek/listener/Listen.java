@@ -1,7 +1,6 @@
 package fr.redsifter.hideandseek.listener;
 
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.List;
 import java.util.ArrayList;
 
 import org.bukkit.Bukkit;
@@ -9,10 +8,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerCommandSendEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.entity.*;
 
-import fr.redsifter.hideandseek.commands.Commands;
 import net.md_5.bungee.api.ChatColor;
 
 public class Listen implements Listener {
@@ -48,31 +46,49 @@ public class Listen implements Listener {
 		}
 	}
 	
-	@EventHandler
-	public void onCommand(PlayerCommandSendEvent event) {
-		Collection<String> cmd = event.getCommands();//on récupére la commande
-		Iterator<String> it = cmd.iterator();
-		int a = -1;
-		String[] lst = new String[12];
-		while(it.hasNext()) {
-			if(a == 0) {
-				lst[a] = (String)it.next();//on récupère les arguments
+	public ArrayList<String> set(String str) {
+		ArrayList<String> temp = new ArrayList<String>();
+		String tmp = "";
+		boolean a = false;
+		for(int i = 0;i < str.length();i++) {
+			tmp += str.charAt(i);
+			if (str.charAt(i) == ' ' && a == true) {
+				if(Bukkit.getPlayerExact(tmp) != null) {
+					temp.add(tmp);
+				}
+				tmp = "";
 			}
-		a++;
+			else if (str.charAt(i) == ' ' && a == false){
+				a = true;
+			}
 		}
-		String[] purged = Commands.purge(lst);//on enlève les "null" (ces boloss)
-		if (cmd.contains("setgamelist")) {//si la commande est "setgamelist" ajoute les arguments (noms de joeurs) aux listes seekers, hiders et players
-			for (int i = 0; i < purged.length;i++){
-				players.add(Bukkit.getPlayerExact(purged[i]));
-				if(i > purged.length/2) {
-				seekers.add(Bukkit.getPlayerExact(purged[i]));
+		return temp;
+		
+	}
+	
+	@EventHandler
+	public void onCommand(PlayerCommandPreprocessEvent event) {
+		String msg = event.getMessage();//on récupére la commande
+		ArrayList<String> playerlist = set(msg);//on récupère et trie les arguments (noms des joueurs)
+		List<String> temp = playerlist.subList(0, 0);
+		StringBuffer sb = new StringBuffer();
+		for(String s : temp) {
+				sb.append(s);//on récupère les arguments
+		}
+		String check = sb.toString();
+		playerlist.remove(0);
+		if (check.equalsIgnoreCase("/setgamelist")) {//si la commande est "setgamelist" ajoute les arguments (noms de joeurs) aux listes seekers, hiders et players
+			for (int i = 0; i < playerlist.size();i++){
+				players.add(Bukkit.getPlayerExact(playerlist.get(i)));
+				if(i > playerlist.size()/2) {
+				seekers.add(Bukkit.getPlayerExact(playerlist.get(i)));
 				}
 				else {
-				hiders.add(Bukkit.getPlayerExact(purged[i]));
+				hiders.add(Bukkit.getPlayerExact(playerlist.get(i)));
 				}
 			}
 		}
-		else if (cmd.contains("startgame")) {//si la commande est "startgame" on lance le chronomètre
+		else if (check.equalsIgnoreCase("/startgame")) {//si la commande est "startgame" on lance le chronomètre
 			//lancer chronomètre
 		}
 
@@ -86,12 +102,12 @@ public class Listen implements Listener {
 			event.setCancelled(true);//si oui chat général désactivé
 			if(hiders.contains(player)) {//si le joueur est hider on envoie son message dans le groupe hider
 				for (Player p: hiders) {
-					p.sendMessage(msg);
+					p.sendMessage("<hs>" + msg);
 				}
 			}
 			else if(seekers.contains(player)) {//si le joueur est seeker on envoie son message dans le groupe seeker
 				for (Player p: seekers) {
-					p.sendMessage(msg);
+					p.sendMessage("<hs>" + msg);
 				}
 			}
 		}

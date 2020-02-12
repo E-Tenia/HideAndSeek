@@ -9,9 +9,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
+import fr.redsifter.hideandseek.channelmanager.ChannelManager;
+import fr.redsifter.hideandseek.timer.Timer;
+
 public class Commands implements CommandExecutor {
+	public ChannelManager cm = new ChannelManager();
 	
-	private String[] purge(String[] list) {
+	public static String[] purge(String[] list) {
 		
 		String[] gm = new String[list.length];
 		int x = 0;
@@ -36,7 +40,7 @@ public class Commands implements CommandExecutor {
 		Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
 
 		Team team = null;
-
+		
 		for (Team t : scoreboard.getTeams()) {
 			if (t.getName().equals(nm)) {
 				team = t;
@@ -47,7 +51,6 @@ public class Commands implements CommandExecutor {
 		if (team == null)
 			team = scoreboard.registerNewTeam(nm);
 		if (nm == "hide") {
-			System.out.println("Hiders created");
 			team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
 		}
 		for(String str : gm) {
@@ -66,7 +69,9 @@ public class Commands implements CommandExecutor {
 			if(args.length > 0) {
 			switch(args[0]) {
 			case "startgame":
-				sender.sendMessage("Not done yet...");
+				sender.sendMessage("Starting new game of hide and seek !");
+				Timer timer = new Timer();
+				timer.run();
 				break;
 			case "setgamelist":
 				if (args.length > 1) {
@@ -92,12 +97,12 @@ public class Commands implements CommandExecutor {
 					init2 = purged.length+1;
 				}
 				if (init1 == 0 || init2 == 0) {
-					sender.sendMessage("Precise players to invite");
+					sender.sendMessage("Precise more players to invite");
 					break;
 				}
 				String[] hiders = new String[init2];
 				String[] seekers = new String[init1];
-				Location spawn = new Location(Bukkit.getWorld("world"),(-223.500),66,(-213.500));
+				Location spawn = new Location(Bukkit.getWorld("world"),(-296.500),79,(-260.500));
 				for(j = 0;j < i-1;j++) {
 					Player pl = Bukkit.getPlayerExact(gamelist[j]);
 					if (pl != null) {

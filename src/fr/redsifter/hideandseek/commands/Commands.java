@@ -13,7 +13,7 @@ import fr.redsifter.hideandseek.timer.Timer;
 
 public class Commands implements CommandExecutor {
 	
-	public static String[] purge(String[] list) {
+	public static String[] purge(String[] list,CommandSender p) {
 		
 		String[] gm = new String[list.length];
 		int x = 0;
@@ -23,15 +23,26 @@ public class Commands implements CommandExecutor {
 				x++;
 			}
 		}
-		System.out.println(x);
 		String[] gmlst = new String[x];
+		x = 0;
 		for(int a = 0; a < gmlst.length;a++) {
-			if (gm[a] != null) {
+			if (gm[a] != null && Bukkit.getPlayerExact(gm[a]) != null) {
 				gmlst[a] = gm[a];
+				x++;
+			}
+			else if (gm[a] != null && Bukkit.getPlayerExact(gm[a]) == null) {
+				p.sendMessage("Player " + gm[a] + " is not here !");
 			}
 		}
-
-		return gmlst;
+		String[] gmlst2 = new String[x];
+		x = 0;
+		for (String s : gmlst) {
+			if(s != null) {
+				gmlst2[x] = s;
+			}
+			x++;
+		}
+		return gmlst2;
 	}
 	
 	private void createTeam(String nm,String[] gm) {
@@ -58,12 +69,7 @@ public class Commands implements CommandExecutor {
 	
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String msg, String[] args) {
-		if (cmd.getName().equalsIgnoreCase("test")){
-		sender.sendMessage("Test working great so far!");
-		return false;
-		}
-		
-		else if (cmd.getName().equalsIgnoreCase("hs")){
+		if (cmd.getName().equalsIgnoreCase("hs")){
 			if(args.length > 0) {
 			switch(args[0]) {
 			case "startgame":
@@ -83,7 +89,7 @@ public class Commands implements CommandExecutor {
 					gamelist[j] = args[i];
 					j++;
 					}
-				String[] purged = purge(gamelist);
+				String[] purged = purge(gamelist,sender);
 				int init1 = 0;
 				int init2 = 0;
 				if (purged.length %2 == 0) {
@@ -94,7 +100,7 @@ public class Commands implements CommandExecutor {
 					init1 = purged.length-1;
 					init2 = purged.length+1;
 				}
-				if (init1 == 0 || init2 == 0) {
+				if (purged.length <= 1) {
 					sender.sendMessage("Precise more players to invite");
 					break;
 				}
@@ -115,10 +121,6 @@ public class Commands implements CommandExecutor {
 							a++;
 						}
 						pl.teleport(spawn);
-					}
-					else {
-						x++;
-						sender.sendMessage("Player " + gamelist[j] + " is not here !");
 					}
 				}
 				createTeam("seek",seekers);

@@ -3,9 +3,6 @@ version: 1.0
 author: redsifter
 main: fr.redsifter.hideandseek.HideAndSeek
 commands:
-  test:
-    description: ceci est une commande de test
-    permission: test.use
   hs:
     description: startgame, setgamelist, setgamewarp
     permission: hs.use

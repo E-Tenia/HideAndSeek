@@ -1,5 +1,6 @@
 package fr.redsifter.hideandseek.commands;
 
+import java.io.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -9,10 +10,15 @@ import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
-import fr.redsifter.hideandseek.timer.Timer;
+import fr.redsifter.hideandseek.HideAndSeek;
 
 public class Commands implements CommandExecutor {
+	private HideAndSeek main;
 	
+	public Commands(HideAndSeek hideAndSeek) {
+		this.main = hideAndSeek;
+	}
+
 	public static String[] purge(String[] list,CommandSender p) {
 		
 		String[] gm = new String[list.length];
@@ -74,8 +80,6 @@ public class Commands implements CommandExecutor {
 			switch(args[0]) {
 			case "startgame":
 				sender.sendMessage("Starting new game of hide and seek !");
-				Timer timer = new Timer();
-				timer.run();
 				break;
 			case "setgamelist":
 				if (args.length > 1) {
@@ -106,7 +110,6 @@ public class Commands implements CommandExecutor {
 				}
 				String[] hiders = new String[init2];
 				String[] seekers = new String[init1];
-				Location spawn = new Location(Bukkit.getWorld("world"),(-296.500),79,(-260.500));
 				for(j = 0;j < i-1;j++) {
 					Player pl = Bukkit.getPlayerExact(gamelist[j]);
 					if (pl != null) {
@@ -120,7 +123,6 @@ public class Commands implements CommandExecutor {
 							seekers[a - x] = gamelist[j];
 							a++;
 						}
-						pl.teleport(spawn);
 					}
 				}
 				createTeam("seek",seekers);
@@ -129,6 +131,20 @@ public class Commands implements CommandExecutor {
 				else {
 					sender.sendMessage("Precise players to invite");
 				}
+				break;
+			case "setgamewarp":
+				if (sender instanceof Player) {
+					Player player = Bukkit.getPlayerExact(sender.getName());
+					Location loc = player.getLocation();
+					String name = args[0];
+					main.getConfig().set("warps."+ name,name);
+					main.getConfig().set("warps." + name + ".Location",loc);
+				}
+				break;
+			case "remgamewarp":
+				String name = args[0];
+				main.getConfig().set("warps."+name, null);
+				main.saveConfig();
 				break;
 			default:
 				sender.sendMessage("Unknown command");
@@ -141,6 +157,17 @@ public class Commands implements CommandExecutor {
 		}
 	return false;
 	}
+
+public void ConfigWrite(String txt) {
+		try
+		{
+			FileWriter fw = new FileWriter("HideAndSeek/config.yml",true);
+			fw.write(txt);
+			fw.close();
+		}
+		catch(IOException ioe)
+		{
+			System.err.println("IOException: " + ioe.getMessage());
+		}
+	}
 }
-
-

@@ -1,6 +1,5 @@
 package fr.redsifter.hideandseek.commands;
 
-import java.io.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -134,15 +133,23 @@ public class Commands implements CommandExecutor {
 				break;
 			case "setgamewarp":
 				if (sender instanceof Player) {
+					if(args.length < 2) {
+						sender.sendMessage("Precise a name");
+						return true;
+					}
 					Player player = Bukkit.getPlayerExact(sender.getName());
 					Location loc = player.getLocation();
-					String name = args[0];
+					String name = args[1];
 					main.getConfig().set("warps."+ name,name);
 					main.getConfig().set("warps." + name + ".Location",loc);
 				}
 				break;
 			case "remgamewarp":
-				String name = args[0];
+				if(args.length < 2) {
+					sender.sendMessage("Precise a warp");
+					return true;
+				}
+				String name = args[1];
 				main.getConfig().set("warps."+name, null);
 				main.saveConfig();
 				break;
@@ -156,18 +163,5 @@ public class Commands implements CommandExecutor {
 			}
 		}
 	return false;
-	}
-
-public void ConfigWrite(String txt) {
-		try
-		{
-			FileWriter fw = new FileWriter("HideAndSeek/config.yml",true);
-			fw.write(txt);
-			fw.close();
-		}
-		catch(IOException ioe)
-		{
-			System.err.println("IOException: " + ioe.getMessage());
-		}
 	}
 }

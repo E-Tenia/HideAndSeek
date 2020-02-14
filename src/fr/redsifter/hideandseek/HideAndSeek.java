@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
@@ -22,7 +23,8 @@ import net.md_5.bungee.api.ChatColor;
 
 public class HideAndSeek extends JavaPlugin implements Listener{
 	private HideAndSeek main;
-	public Timer timer = new Timer();
+	public static int time;
+	public static boolean cancel;
 	public ArrayList<Player> players = new ArrayList<Player>();
 	public ArrayList<Player> seekers = new ArrayList<Player>();
 	public ArrayList<Player> hiders = new ArrayList<Player>();
@@ -67,7 +69,9 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 				for(Player p : players) {
 					p.teleport(loc);
 				}
+				Timer timer = new Timer();
 				timer.time = arg1;
+				timer.lst = players;
 				timer.runTaskTimer(this , 0, 20);
 			}
 		}
@@ -146,12 +150,24 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		}
 		if(players.contains(player)) {
 			players.remove(player);
-		}
-		if(seekers.contains(player)) {
-			seekers.remove(player);
-		}
-		if(hiders.contains(player)) {
-			hiders.remove(player);
+			if(seekers.contains(player)) {
+				seekers.remove(player);
+				if(seekers.isEmpty()) {
+					for(Player p : players) {
+						p.sendMessage("Not enough players to keep the game going, stopping the timer...");
+					}
+					cancel = true;
+				}
+			}
+			if(hiders.contains(player)) {
+				hiders.remove(player);
+				if(hiders.isEmpty()) {
+					for(Player p : players) {
+						p.sendMessage("Not enough players to keep the game going, stopping the timer...");
+					}
+					cancel = true;
+				}
+			}
 		}
 	}
 	@EventHandler
@@ -181,12 +197,12 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 			players.clear();
 			deleteTeam("seek");
 			deleteTeam("hide");
-			//Arreter chronomètre
+			cancel = true;
 		}
 	}
 	
 	@EventHandler
-	public void onCommand(PlayerCommandPreprocessEvent event) {
+	public void onSet(PlayerCommandPreprocessEvent event) {
 		String msg = event.getMessage();//on récupère la commande
 		ArrayList<String> playerlist = cut(msg);//on récupère et trie les arguments (noms des joueurs)
 		String check = "";
@@ -239,8 +255,21 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	}
 	
 	@EventHandler
-	public void onTimerRunsOut() {
-		//Si timer = 0 finir la partie
+	public void onTimerRunsOut(EntityRegainHealthEvent event) {
+		Entity ent = event.getEntity();
+		Player player = Bukkit.getPlayerExact(ent.getName());
+		if(time == -1 && player != null && players.contains(player)) {
+			for(Player p : players) {
+				p.sendMessage("The hiders won !");
+			}
+			hiders.clear();
+			seekers.clear();
+			players.clear();
+			deleteTeam("seek");
+			deleteTeam("hide");
+			cancel = true;
+			
+		}
 	}
 	
 }

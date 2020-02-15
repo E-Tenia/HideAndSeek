@@ -1,5 +1,6 @@
 package fr.redsifter.hideandseek.commands;
 
+import java.util.ArrayList;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -10,6 +11,7 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
 import fr.redsifter.hideandseek.HideAndSeek;
+import fr.redsifter.hideandseek.timer.Timer;
 
 public class Commands implements CommandExecutor {
 	private HideAndSeek main;
@@ -79,6 +81,25 @@ public class Commands implements CommandExecutor {
 			switch(args[0]) {
 			case "startgame":
 				sender.sendMessage("Starting new game of hide and seek !");
+				String check = HideAndSeek.startcheck;
+				int arg1 = HideAndSeek.startarg;
+				String warp = HideAndSeek.startwarpname;
+				Player ply = HideAndSeek.startplayer;
+				ArrayList<Player> players = HideAndSeek.startplayerlist;
+				Location location = main.getConfig().getLocation("warps."+warp+".Location");
+				if(location == null) {
+					ply.sendMessage("Invalid warp name, aborting...");
+					return true;
+				}
+				if(check.equalsIgnoreCase("startgame")){
+					for(Player p : players) {
+						p.teleport(location);
+					}
+					Timer timer = new Timer();
+					timer.time = arg1;
+					timer.lst = players;
+					timer.runTaskTimer(main , 0, 20);
+				}
 				break;
 			case "setgamelist":
 				if (args.length > 1) {

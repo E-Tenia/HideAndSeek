@@ -7,7 +7,6 @@ import org.bukkit.scoreboard.Team;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,11 +17,14 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import fr.redsifter.hideandseek.commands.Commands;
-import fr.redsifter.hideandseek.timer.Timer;
 import net.md_5.bungee.api.ChatColor;
 
 public class HideAndSeek extends JavaPlugin implements Listener{
-	private HideAndSeek main;
+	public static String startwarpname;
+	public static int startarg;
+	public static String startcheck;
+	public static Player startplayer;
+	public static ArrayList<Player> startplayerlist;
 	public static int time;
 	public static boolean cancel;
 	public ArrayList<Player> players = new ArrayList<Player>();
@@ -49,75 +51,46 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		String check = "";
 		int arg1 = 0;
 		String warp = "";
-		ArrayList<String> newlist = cut2(msg);
-		if(newlist.contains("/startgame")) {
-			if(newlist.size() == 2) {
-				newlist.remove(0);
+		ArrayList<String> newlist = cut(msg);
+		System.out.println(newlist);
+		if(newlist.contains("startgame")) {
+			if(newlist.size() >= 3) {
 				check = newlist.get(0);
-				arg1 = Integer.parseInt(newlist.get(1).trim());
-				warp = newlist.get(2);
+				newlist.remove(0);
+				arg1 = Integer.parseInt(newlist.get(0).trim());
+				warp = newlist.get(1);
 			}
 			else {
 				check = msg;
 			}
-			Location loc = main.getConfig().getLocation("warps."+warp+".Location");
-			if(loc == null) {
-				event.getPlayer().sendMessage("Invalid warp name, aborting...");
-				return;
-			}
-			if(check.equalsIgnoreCase("/startgame")){
-				for(Player p : players) {
-					p.teleport(loc);
-				}
-				Timer timer = new Timer();
-				timer.time = arg1;
-				timer.lst = players;
-				timer.runTaskTimer(this , 0, 20);
-			}
+			startcheck = check;
+			startarg = arg1;
+			startwarpname = warp;
+			startplayer = event.getPlayer();
+			startplayerlist = players;
 		}
 	}
 	
 	public ArrayList<String> cut(String str) {
+		str = str + ' ';
 		ArrayList<String> temp = new ArrayList<String>();
 		String tmp = "";
 		boolean a = false;
 		for(int i = 0;i < str.length();i++) {
-			tmp += str.charAt(i);
-			if (str.charAt(i) == ' ' && a == true) {
-				if(Bukkit.getPlayerExact(tmp) != null) {
-					temp.add(tmp);
-				}
-				tmp = "";
-			}
-			else if (str.charAt(i) == ' ' && a == false){
-				a = true;
-			}
-		}
-		if (a == false) {
-			temp.add(str); 
-		}
-		return temp;
-		
-	}
-	
-	public ArrayList<String> cut2(String str) {
-		ArrayList<String> temp = new ArrayList<String>();
-		String tmp = "";
-		boolean a = false;
-		for(int i = 0;i < str.length();i++) {
-			tmp += str.charAt(i);
 			if (str.charAt(i) == ' ' && a == true) {
 				if(tmp != null) {
-					temp.add(tmp);
+					temp.add(tmp.trim());
 				}
 				tmp = "";
 			}
 			else if (str.charAt(i) == ' ' && a == false){
+				tmp = "";
 				a = true;
 			}
+			tmp += str.charAt(i);
 		}
 		if (a == false) {
-			temp.add(str); 
+			temp.add(str.trim()); 
 		}
 		return temp;
 		
@@ -176,18 +149,18 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		String name1 = event.getDamager().getName();
 		Entity ent = event.getEntity();//entité ayant été frappée
 		String name2 = event.getEntity().getName();
-		
 		if(attacker instanceof Player && ent instanceof Player) {//si les deux entités sont des joeurs on vérifie qu'elles sont dans une partie
-			if(players.contains(Bukkit.getPlayerExact(name1)) && players.contains(Bukkit.getPlayerExact(name2))){//si c'est le cas on notifie au joueur frappé qu'il a été trouvé et au joueur frappant qu'il l'a trouvé ainsi qu'au reste des joueurs
-				Bukkit.getPlayerExact(name2).sendMessage(ChatColor.YELLOW + "You got found by " + Bukkit.getPlayerExact(name1));
-				Bukkit.getPlayerExact(name1).sendMessage(ChatColor.GREEN + "You found " + Bukkit.getPlayerExact(name2));
+			if(seekers.contains(Bukkit.getPlayerExact(name2)) && hiders.contains(Bukkit.getPlayerExact(name1))){//si c'est le cas on notifie au joueur frappé qu'il a été trouvé et au joueur frappant qu'il l'a trouvé ainsi qu'au reste des joueurs
+				Bukkit.getPlayerExact(name2).sendMessage(ChatColor.YELLOW + "You got found by " + name1);
+				Bukkit.getPlayerExact(name1).sendMessage(ChatColor.GREEN + "You found " + name2);
 				for(Player p : players) {
-					p.sendMessage(ChatColor.RED + "" + Bukkit.getPlayerExact(name2).getName() + "has been found by " + Bukkit.getPlayerExact(name1).getName());
+					p.sendMessage(ChatColor.RED + "" + Bukkit.getPlayerExact(name2).getName() + " has been found by " + Bukkit.getPlayerExact(name1).getName());
 				}
-				hiders.remove(ent);
-				players.remove(ent);
+				hiders.remove(attacker);
 			}
 			}
+		System.out.println(hiders);
+		System.out.println(hiders.isEmpty());
 			if(hiders.isEmpty()) {//si tous les hiders on été trouvés on le notifie aux joueurs, on vide les listes restantes et on arrete le chronomètre
 				for (Player p : players) {
 					p.sendMessage("All the hiders have been found, game over !");
@@ -206,18 +179,21 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		String msg = event.getMessage();//on récupère la commande
 		ArrayList<String> playerlist = cut(msg);//on récupère et trie les arguments (noms des joueurs)
 		String check = "";
-		if (playerlist.contains("/setgamelist")) {
-			if(playerlist.size() > 1) {
-				playerlist.remove(0);
+		if (playerlist.contains("setgamelist")) {
+			if(playerlist.size() >= 1) {
 				check = playerlist.get(0);
+				playerlist.remove(0);
 			}
 			else {
 				check = msg;
 			}
-			if (check.equalsIgnoreCase("/setgamelist")) {//si la commande est "setgamelist" ajoute les arguments (noms de joeurs) aux listes seekers, hiders et players
+			System.out.println(check);
+			System.out.println(playerlist);
+			System.out.println(playerlist.size());
+			if (check.equalsIgnoreCase("setgamelist")) {//si la commande est "setgamelist" ajoute les arguments (noms de joeurs) aux listes seekers, hiders et players
 				for (int i = 0; i < playerlist.size();i++){
 					players.add(Bukkit.getPlayerExact(playerlist.get(i)));
-					if(i > playerlist.size()/2) {
+					if(i >= playerlist.size()/2) {
 					seekers.add(Bukkit.getPlayerExact(playerlist.get(i)));
 					}
 					else {
@@ -258,7 +234,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	public void onTimerRunsOut(EntityRegainHealthEvent event) {
 		Entity ent = event.getEntity();
 		Player player = Bukkit.getPlayerExact(ent.getName());
-		if(time == -1 && player != null && players.contains(player)) {
+		if(time == 0 && player != null && players.contains(player)) {
 			for(Player p : players) {
 				p.sendMessage("The hiders won !");
 			}

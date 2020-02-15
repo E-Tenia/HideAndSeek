@@ -73,6 +73,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	
 	public void startTimer(int arg1) {
 		Timer timer = new Timer();
+		cancel = false;
 		timer.time = arg1;
 		timer.lst = players;
 		timer.runTaskTimer(this, 0, 20);
@@ -237,19 +238,6 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		}
 		else if(general.contains(player)) {
 			event.setCancelled(true);//sinon chat général toujours activé
-			/*for(Player p2 : general) {
-				int  a = 0;
-				for(Player p3 : general) {
-					if (p3 == p2) {
-						a++;
-					}
-				}
-				if(a > 1) {
-					for (int i = 0;i < a-1;i++) {
-						general.remove(p2);
-					}
-				}
-			}*/
 			for (Player p: general) {
 				p.sendMessage(ChatColor.DARK_AQUA + "[" + p.getWorld().getName() + "]" + ChatColor.LIGHT_PURPLE + "[" + player.getName() + "]"+ ChatColor.WHITE + msg);
 			}

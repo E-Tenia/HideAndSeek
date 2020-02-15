@@ -22,6 +22,7 @@ public class Timer extends BukkitRunnable {
 		if(time == 0) {
 			for (Player p : lst) {
 				p.addPotionEffect((new PotionEffect(PotionEffectType.HEAL, 1, 10)));
+				p.setFoodLevel(20);
 				 
 			}
 			cancel();

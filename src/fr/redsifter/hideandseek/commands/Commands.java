@@ -11,7 +11,6 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
 import fr.redsifter.hideandseek.HideAndSeek;
-import fr.redsifter.hideandseek.timer.Timer;
 
 public class Commands implements CommandExecutor {
 	private HideAndSeek main;
@@ -82,7 +81,6 @@ public class Commands implements CommandExecutor {
 			case "startgame":
 				sender.sendMessage("Starting new game of hide and seek !");
 				String check = HideAndSeek.startcheck;
-				int arg1 = HideAndSeek.startarg;
 				String warp = HideAndSeek.startwarpname;
 				Player ply = HideAndSeek.startplayer;
 				ArrayList<Player> players = HideAndSeek.startplayerlist;
@@ -95,10 +93,6 @@ public class Commands implements CommandExecutor {
 					for(Player p : players) {
 						p.teleport(location);
 					}
-					Timer timer = new Timer();
-					timer.time = arg1;
-					timer.lst = players;
-					timer.runTaskTimer(main , 0, 20);
 				}
 				break;
 			case "setgamelist":

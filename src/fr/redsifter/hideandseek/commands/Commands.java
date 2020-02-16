@@ -1,6 +1,8 @@
 package fr.redsifter.hideandseek.commands;
 
 import java.util.ArrayList;
+import java.util.Set;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -204,13 +206,20 @@ public class Commands implements CommandExecutor {
 				main.getConfig().set("warps."+name, null);
 				main.saveConfig();
 				break;
+			case "listwarps":
+				Set<String> warps = main.getConfig().getConfigurationSection("warps").getKeys(false);
+				sender.sendMessage("Available warps : ");
+				for (String s : warps) {
+					sender.sendMessage(s);
+				}
+				break;
 			default:
 				sender.sendMessage("Unknown command");
 				break;
 			}
 			}
 			else {
-				sender.sendMessage("Precise arguments : startgame, setgamelist, setgamewarp");
+				sender.sendMessage("Precise arguments : startgame, setgamelist, setgamewarp, remgamewarp, listwarps");
 			}
 		}
 	return false;

@@ -262,7 +262,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		else if(general.contains(player)) {
 			event.setCancelled(true);//sinon chat général toujours activé
 			for (Player p: general) {
-				p.sendMessage(ChatColor.DARK_AQUA + "[" + p.getWorld().getName() + "]" + ChatColor.LIGHT_PURPLE + "[" + player.getName() + "]"+ ChatColor.WHITE + msg);
+				p.sendMessage(ChatColor.GOLD + "[" + p.getWorld().getName() + "]" + ChatColor.AQUA + "[" + player.getName() + "]"+ ChatColor.WHITE + msg);
 			}
 		}
 	}

@@ -51,9 +51,38 @@ public class Commands implements CommandExecutor {
 		return gmlst2;
 	}
 	
+	public static String[] purge2(String[] list) {
+		
+		String[] gm = new String[list.length];
+		int x = 0;
+		for(int b = 0; b < list.length;b++) {
+			if (list[b] != null) {
+				gm[x] = list[b];
+				x++;
+			}
+		}
+		String[] gmlst = new String[x];
+		x = 0;
+		for(int a = 0; a < gmlst.length;a++) {
+			if (gm[a] != null && Bukkit.getPlayerExact(gm[a]) != null) {
+				gmlst[a] = gm[a];
+				x++;
+			}
+		}
+		String[] gmlst2 = new String[x];
+		x = 0;
+		for (String s : gmlst) {
+			if(s != null) {
+				gmlst2[x] = s;
+			}
+			x++;
+		}
+		return gmlst2;
+	}
+	
 	private void createTeam(String nm,String[] gm) {
 		Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
-
+		String[] gm2 = purge2(gm);
 		Team team = null;
 		
 		for (Team t : scoreboard.getTeams()) {
@@ -68,8 +97,8 @@ public class Commands implements CommandExecutor {
 		if (nm == "hide") {
 			team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER);
 		}
-		for(String str : gm) {
-		team.addEntry(str);	
+		for(String str : gm2) {
+			team.addEntry(str);	
 		}
 	}
 	
@@ -101,12 +130,12 @@ public class Commands implements CommandExecutor {
 				int j = 0;
 				int a = 0;
 				int b = 0;
-				int x = 0;
+				int split = 1;
 				String[] gamelist = new String[12];
 				for (i = 1;i < args.length;i++){
 					gamelist[j] = args[i];
 					j++;
-					}
+				}
 				String[] purged = purge(gamelist,sender);
 				int init1 = 0;
 				int init2 = 0;
@@ -124,17 +153,23 @@ public class Commands implements CommandExecutor {
 				}
 				String[] hiders = new String[init2];
 				String[] seekers = new String[init1];
+				if(i-1 == 2) {
+					split = 0;
+				}
 				for(j = 0;j < i-1;j++) {
 					Player pl = Bukkit.getPlayerExact(gamelist[j]);
+					System.out.println("size2 : "+ (i-1));
+					System.out.println("list2 : "+ gamelist);
+					System.out.println("split2 : "+(((i-1)/2)+split));
 					if (pl != null) {
-						if (j - x > (i/2)-1) {
+						if (j > ((i/2)-1)-split) {
 							sender.sendMessage("Inviting " + gamelist[j] + " as Hider !");
-							hiders[b - x] = gamelist[j];
+							hiders[b] = gamelist[j];
 							b++;
 						}
 						else{
 							sender.sendMessage("Inviting " + gamelist[j] + " as Seeker !");
-							seekers[a - x] = gamelist[j];
+							seekers[a] = gamelist[j];
 							a++;
 						}
 					}

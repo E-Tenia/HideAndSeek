@@ -2,6 +2,8 @@ package fr.redsifter.hideandseek;
 
 import java.util.ArrayList;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 import org.bukkit.event.Listener;
@@ -17,16 +19,18 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import fr.redsifter.hideandseek.commands.Commands;
-import fr.redsifter.hideandseek.timer.Timer;
+import fr.redsifter.hideandseek.timer.*;
 import net.md_5.bungee.api.ChatColor;
 
 public class HideAndSeek extends JavaPlugin implements Listener{
+	public int initialtime;
 	public static String startwarpname;
 	public static String startcheck;
 	public static Player startplayer;
 	public static ArrayList<Player> startplayerlist;
 	public static int time;
 	public static boolean cancel;
+	public static boolean run;
 	public ArrayList<Player> players = new ArrayList<Player>();
 	public ArrayList<Player> seekers = new ArrayList<Player>();
 	public ArrayList<Player> hiders = new ArrayList<Player>();
@@ -52,7 +56,6 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		int arg1 = 0;
 		String warp = "";
 		ArrayList<String> newlist = cut(msg);
-		System.out.println(newlist);
 		if(newlist.contains("startgame")) {
 			if(newlist.size() >= 3) {
 				check = newlist.get(0);
@@ -67,17 +70,26 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 			startwarpname = warp;
 			startplayer = event.getPlayer();
 			startplayerlist = players;
-			startTimer(arg1);
+			for (Player p : seekers) {
+				p.addPotionEffect((new PotionEffect(PotionEffectType.BLINDNESS, 20*60, 1)));
+				p.addPotionEffect((new PotionEffect(PotionEffectType.SLOW, 20*60, 100)));
+				p.addPotionEffect((new PotionEffect(PotionEffectType.JUMP, 20*60, 200)));
+				p.sendMessage(ChatColor.GOLD + "The hiders are hiding, you'll be able to move after 1 min");
+			}
+			for (Player p : hiders) {
+				p.sendMessage(ChatColor.GOLD + "You have 1 min to get as far as possible and hide");
+				}
+			startTimer(arg1,players);
 		}
 	}
-	
-	public void startTimer(int arg1) {
+
+	public void startTimer(int arg1,ArrayList<Player> lst) {
 		Timer timer = new Timer();
 		cancel = false;
+		initialtime = arg1;
 		timer.time = arg1;
-		timer.lst = players;
+		timer.lst = lst;
 		timer.runTaskTimer(this, 0, 20);
-		System.out.println(time);
 	}
 	
 	public ArrayList<String> cut(String str) {
@@ -158,18 +170,17 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		String name1 = event.getDamager().getName();
 		Entity ent = event.getEntity();//entité ayant été frappée
 		String name2 = event.getEntity().getName();
+		if(time < initialtime-60) {
 		if(damager instanceof Player && ent instanceof Player) {//si les deux entités sont des joeurs on vérifie qu'elles sont dans une partie
-			if(seekers.contains(Bukkit.getPlayerExact(name2)) && hiders.contains(Bukkit.getPlayerExact(name1))){//si c'est le cas on notifie au joueur frappé qu'il a été trouvé et au joueur frappant qu'il l'a trouvé ainsi qu'au reste des joueurs
+			if(seekers.contains(Bukkit.getPlayerExact(name1)) && hiders.contains(Bukkit.getPlayerExact(name2))){//si c'est le cas on notifie au joueur frappé qu'il a été trouvé et au joueur frappant qu'il l'a trouvé ainsi qu'au reste des joueurs
 				Bukkit.getPlayerExact(name2).sendMessage(ChatColor.YELLOW + "You got found by " + name1);
 				Bukkit.getPlayerExact(name1).sendMessage(ChatColor.GREEN + "You found " + name2);
 				for(Player p : players) {
 					p.sendMessage(ChatColor.RED + "" + Bukkit.getPlayerExact(name2).getName() + " has been found by " + Bukkit.getPlayerExact(name1).getName());
 				}
-				hiders.remove(Bukkit.getPlayerExact(damager.getName()));
+				hiders.remove(Bukkit.getPlayerExact(ent.getName()));
 			}
 			}
-		System.out.println(hiders);
-		System.out.println(hiders.isEmpty());
 			if(hiders.isEmpty()) {//si tous les hiders on été trouvés on le notifie aux joueurs, on vide les listes restantes et on arrete le chronomètre
 				for (Player p : players) {
 					p.sendMessage("All the hiders have been found, game over !");
@@ -182,30 +193,42 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 			cancel = true;
 		}
 	}
+	}
 	
 	@EventHandler
 	public void onSet(PlayerCommandPreprocessEvent event) {
 		String msg = event.getMessage();//on récupère la commande
 		ArrayList<String> playerlist = cut(msg);//on récupère et trie les arguments (noms des joueurs)
 		String check = "";
+		int splitter = 0;
+		int split = 1;
 		if (playerlist.contains("setgamelist")) {
-			if(playerlist.size() >= 1) {
+			if(playerlist.size() >= 2) {
 				check = playerlist.get(0);
 				playerlist.remove(0);
 			}
 			else {
-				check = msg;
+				return;
 			}
-			System.out.println(check);
-			System.out.println(playerlist);
-			System.out.println(playerlist.size());
 			if (check.equalsIgnoreCase("setgamelist")) {//si la commande est "setgamelist" ajoute les arguments (noms de joeurs) aux listes seekers, hiders et players
 				for (String p : playerlist) {
 					general.remove(Bukkit.getPlayerExact(p));
 				}
+				if(playerlist.size() == 2) {
+					split = 0;
+				}
+				if(playerlist.size()%2 == 0) {
+					splitter = 0;
+				}
+				else {
+					splitter = 1;
+				}
 				for (int i = 0; i < playerlist.size();i++){
 					players.add(Bukkit.getPlayerExact(playerlist.get(i)));
-					if(i >= playerlist.size()/2) {
+					System.out.println("size1 : "+(playerlist.size()));
+					System.out.println("list1 : "+ playerlist);
+					System.out.println("split1 : "+(playerlist.size()/2+split));
+					if(i < ((playerlist.size()/2)+splitter)-split) {
 					seekers.add(Bukkit.getPlayerExact(playerlist.get(i)));
 					}
 					else {
@@ -218,8 +241,6 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	
 	@EventHandler
 	public void onChat(AsyncPlayerChatEvent event) {
-		System.out.println(players);
-		System.out.println(general);
 		Player player = event.getPlayer();//Joueur ayant envoyé un message dans le chat
 		String msg = event.getMessage();//message ayant été envoyé
 		if (players.contains(player)) {//test si la liste des joueurs contient ce joueur

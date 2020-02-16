@@ -114,6 +114,7 @@ public class Commands implements CommandExecutor {
 				Player ply = HideAndSeek.startplayer;
 				ArrayList<Player> players = HideAndSeek.startplayerlist;
 				Location location = main.getConfig().getLocation("warps."+warp+".Location");
+				HideAndSeek.gamewarp = location;
 				if(location == null) {
 					ply.sendMessage("Invalid warp name, aborting...");
 					return true;

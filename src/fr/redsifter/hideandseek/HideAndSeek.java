@@ -17,6 +17,7 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.Location;
 
 import fr.redsifter.hideandseek.commands.Commands;
 import fr.redsifter.hideandseek.timer.*;
@@ -31,6 +32,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	public static int time;
 	public static boolean cancel;
 	public static boolean run;
+	public static Location gamewarp;
 	public ArrayList<Player> players = new ArrayList<Player>();
 	public ArrayList<Player> seekers = new ArrayList<Player>();
 	public ArrayList<Player> hiders = new ArrayList<Player>();
@@ -266,10 +268,14 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	}
 	
 	@EventHandler
-	public void onTimerRunsOut(EntityRegainHealthEvent event) {
+	public void onTimeCheck(EntityRegainHealthEvent event) {
 		Entity ent = event.getEntity();
 		Player player = Bukkit.getPlayerExact(ent.getName());
+		if(cancel == true) {
+			gamewarp = null;
+		}
 		if(time == 0 && player != null && players.contains(player)) {
+			gamewarp = null;
 			for(Player p : players) {
 				p.sendMessage("The hiders won !");
 				general.add(p);
@@ -281,6 +287,16 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 			deleteTeam("hide");
 			cancel = true;
 			
+		}
+		if(player != null && players.contains(player) && gamewarp != null) {
+			if(player.getLocation().distanceSquared(gamewarp) >= 4600 && player.getLocation().distanceSquared(gamewarp) < 8000) {
+				player.sendMessage(ChatColor.RED + "If you go further from this point you will be teleported back to the game start point");
+				player.addPotionEffect((new PotionEffect(PotionEffectType.SLOW, 100, 5)));
+			}
+			else if(player.getLocation().distanceSquared(gamewarp) >= 8000) {
+				player.sendMessage(ChatColor.RED + "You are not authorized to leave the area");
+				player.teleport(gamewarp);
+			}
 		}
 	}
 	

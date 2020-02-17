@@ -9,6 +9,7 @@ import org.bukkit.scoreboard.Team;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -73,12 +74,14 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 			startplayer = event.getPlayer();
 			startplayerlist = players;
 			for (Player p : seekers) {
+				p.setGameMode(GameMode.ADVENTURE);
 				p.addPotionEffect((new PotionEffect(PotionEffectType.BLINDNESS, 20*60, 1)));
 				p.addPotionEffect((new PotionEffect(PotionEffectType.SLOW, 20*60, 100)));
 				p.addPotionEffect((new PotionEffect(PotionEffectType.JUMP, 20*60, 200)));
 				p.sendMessage(ChatColor.GOLD + "The hiders are hiding, you'll be able to move after 1 min");
 			}
 			for (Player p : hiders) {
+				p.setGameMode(GameMode.ADVENTURE);
 				p.sendMessage(ChatColor.GOLD + "You have 1 min to get as far as possible and hide");
 				}
 			startTimer(arg1,players);
@@ -134,6 +137,9 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	@EventHandler
 	public void onJoin(PlayerJoinEvent event){
 		Player player = event.getPlayer();
+		if(!player.isOp()) {
+			player.setGameMode(GameMode.SURVIVAL);
+		}
 		if(!general.contains(player)) {
 			general.add(player);
 		}
@@ -185,6 +191,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		}
 		if(hiders.isEmpty()) {//si tous les hiders on été trouvés on le notifie aux joueurs, on vide les listes restantes et on arrete le chronomètre
 			for (Player p : players) {
+				p.setGameMode(GameMode.SURVIVAL);
 				p.sendMessage("All the hiders have been found, game over !");
 				general.add(p);
 			}
@@ -288,6 +295,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		if(time == 0 && player != null && players.contains(player)) {
 			gamewarp = null;
 			for(Player p : players) {
+				p.setGameMode(GameMode.SURVIVAL);
 				p.sendMessage("The hiders won !");
 				general.add(p);
 			}

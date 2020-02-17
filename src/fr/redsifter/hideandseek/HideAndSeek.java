@@ -300,11 +300,11 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 			
 		}
 		if(player != null && players.contains(player) && gamewarp != null) {
-			if(player.getLocation().distanceSquared(gamewarp) >= 4600 && player.getLocation().distanceSquared(gamewarp) < 8000) {
+			if(player.getLocation().distanceSquared(gamewarp) >= 9500 && player.getLocation().distanceSquared(gamewarp) < 15700) {
 				player.sendMessage(ChatColor.RED + "If you go further from this point you will be teleported back to the game start point");
 				player.addPotionEffect((new PotionEffect(PotionEffectType.SLOW, 100, 5)));
 			}
-			else if(player.getLocation().distanceSquared(gamewarp) >= 8000) {
+			else if(player.getLocation().distanceSquared(gamewarp) >= 15700) {
 				player.sendMessage(ChatColor.RED + "You are not authorized to leave the area");
 				player.teleport(gamewarp);
 			}

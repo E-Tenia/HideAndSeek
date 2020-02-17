@@ -18,8 +18,8 @@ import fr.redsifter.hideandseek.HideAndSeek;
 
 public class Timer extends BukkitRunnable {
 	private ScoreboardManager manager = Bukkit.getScoreboardManager();
-	final Scoreboard board = manager.getNewScoreboard();
-	final Objective timer = board.registerNewObjective("TIMER:", "", ""); 
+	final Scoreboard board = manager.getMainScoreboard();
+	final Objective timer = board.registerNewObjective("TIMER", "", ""); 
 	public int time;
 	public ArrayList<Player> lst;
 	public boolean a = true;
@@ -51,6 +51,8 @@ public class Timer extends BukkitRunnable {
 		}
 		if(cancel) {
 			for (Player p : lst) {
+				p.addPotionEffect((new PotionEffect(PotionEffectType.HEAL, 1, 10)));
+				p.setFoodLevel(20);
 				delScoreBoard(p);
 			}
 			cancel();
@@ -61,18 +63,19 @@ public class Timer extends BukkitRunnable {
 	public void setScoreBoard(Player p) {      
         timer.setDisplaySlot(DisplaySlot.SIDEBAR);
         timer.setDisplayName(ChatColor.DARK_PURPLE + "H&S");
-        Score score = timer.getScore(ChatColor.DARK_GREEN + "TIMER:");
+        Score score = timer.getScore(ChatColor.DARK_GREEN + "TIMER");
         score.setScore(time);               
         p.setScoreboard(board);
 	}
 	public void updateScoreBoard(Player p) {
-		Score score = timer.getScore(ChatColor.DARK_GREEN + "TIMER:");
+		Score score = timer.getScore(ChatColor.DARK_GREEN + "TIMER");
 		score.setScore(time);
 		p.setScoreboard(board);
 	}
 	
-	public void delScoreBoard(Player p) {       
+	public void delScoreBoard(Player p) { 
         timer.unregister();
         board.clearSlot(DisplaySlot.SIDEBAR);
+        p.setScoreboard(board);
 	}
 }

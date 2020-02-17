@@ -82,7 +82,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 				p.sendMessage(ChatColor.GOLD + "You have 1 min to get as far as possible and hide");
 				}
 			startTimer(arg1,players);
-		}
+			}
 	}
 
 	public void startTimer(int arg1,ArrayList<Player> lst) {
@@ -150,7 +150,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 				seekers.remove(player);
 				if(seekers.isEmpty()) {
 					for(Player p : players) {
-						p.sendMessage("Not enough players to keep the game going, stopping the timer...");
+						p.sendMessage("Not enough players to keep the game going, cancelling...");
 					}
 					cancel = true;
 				}
@@ -159,7 +159,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 				hiders.remove(player);
 				if(hiders.isEmpty()) {
 					for(Player p : players) {
-						p.sendMessage("Not enough players to keep the game going, stopping the timer...");
+						p.sendMessage("Not enough players to keep the game going, cancelling...");
 					}
 					cancel = true;
 				}
@@ -182,19 +182,19 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 				}
 				hiders.remove(Bukkit.getPlayerExact(ent.getName()));
 			}
+		}
+		if(hiders.isEmpty()) {//si tous les hiders on été trouvés on le notifie aux joueurs, on vide les listes restantes et on arrete le chronomètre
+			for (Player p : players) {
+				p.sendMessage("All the hiders have been found, game over !");
+				general.add(p);
 			}
-			if(hiders.isEmpty()) {//si tous les hiders on été trouvés on le notifie aux joueurs, on vide les listes restantes et on arrete le chronomètre
-				for (Player p : players) {
-					p.sendMessage("All the hiders have been found, game over !");
-					general.add(p);
-				}
+			cancel = true;
 			seekers.clear();
 			players.clear();
 			deleteTeam("seek");
 			deleteTeam("hide");
-			cancel = true;
+			}
 		}
-	}
 	}
 	
 	@EventHandler
@@ -269,8 +269,21 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	
 	@EventHandler
 	public void onTimeCheck(EntityRegainHealthEvent event) {
+		System.out.println(hiders);
+		System.out.println(seekers);
 		Entity ent = event.getEntity();
 		Player player = Bukkit.getPlayerExact(ent.getName());
+		Player closest = hiders.get(0);
+		double current = seekers.get(0).getLocation().distanceSquared(hiders.get(0).getLocation());
+		for (Player p : seekers) {
+			for (Player p2 : hiders) {
+				if(p.getLocation().distanceSquared(p2.getLocation()) <= current) {
+					current = p.getLocation().distanceSquared(p2.getLocation());
+					closest = p2;
+				}
+			}
+		}
+		player.setCompassTarget(closest.getLocation());
 		if(cancel == true) {
 			gamewarp = null;
 		}

@@ -23,38 +23,29 @@ public class Timer extends BukkitRunnable {
 	public int time;
 	public ArrayList<Player> lst;
 	public boolean a = true;
-	public boolean cancel;
 	@Override
 	public void run() {
 		if(a) {
 			for (Player p : lst) {
 				setScoreBoard(p);
 			}
+			a = false;
 		}
-		a = false;
 		HideAndSeek.time = time;
-		cancel = HideAndSeek.cancel; 
 		for (Player p : lst) {
 			updateScoreBoard(p);
 			p.addPotionEffect((new PotionEffect(PotionEffectType.HEAL, 1, 10)));
 			p.setFoodLevel(20);
 			 
 		}
-		if(time == 0) {
+		System.out.println(HideAndSeek.cancel);
+		if(time == 0 || HideAndSeek.cancel == true) {
 			for (Player p : lst) {
 				p.addPotionEffect((new PotionEffect(PotionEffectType.HEAL, 1, 10)));
 				p.setFoodLevel(20);
-				delScoreBoard(p);
 				 
 			}
-			cancel();
-		}
-		if(cancel) {
-			for (Player p : lst) {
-				p.addPotionEffect((new PotionEffect(PotionEffectType.HEAL, 1, 10)));
-				p.setFoodLevel(20);
-				delScoreBoard(p);
-			}
+			delScoreBoard();
 			cancel();
 		}
 		time--;
@@ -73,9 +64,8 @@ public class Timer extends BukkitRunnable {
 		p.setScoreboard(board);
 	}
 	
-	public void delScoreBoard(Player p) { 
+	public void delScoreBoard() { 
         timer.unregister();
         board.clearSlot(DisplaySlot.SIDEBAR);
-        p.setScoreboard(board);
 	}
 }

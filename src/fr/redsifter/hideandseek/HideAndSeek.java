@@ -269,8 +269,6 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	
 	@EventHandler
 	public void onTimeCheck(EntityRegainHealthEvent event) {
-		System.out.println(hiders);
-		System.out.println(seekers);
 		Entity ent = event.getEntity();
 		Player player = Bukkit.getPlayerExact(ent.getName());
 		Player closest = hiders.get(0);

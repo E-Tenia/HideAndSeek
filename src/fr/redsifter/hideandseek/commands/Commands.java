@@ -110,6 +110,15 @@ public class Commands implements CommandExecutor {
 			if(args.length > 0) {
 			switch(args[0]) {
 			case "startgame":
+				Set<String> warplist = main.getConfig().getConfigurationSection("warps").getKeys(false);
+				int arg1 = Integer.parseInt(args[1].trim());
+				if(args.length < 3) {
+					break;
+				}
+				else if((arg1 > 100000 || arg1 < 100) || !warplist.contains(args[2])) {
+					sender.sendMessage("Invalid parameters, you must precise a time amount between 100000 and 100 and a valid warp (to list warp, use \"/hs listwarps\")");
+					return true;
+				}	
 				sender.sendMessage("Starting new game of hide and seek !");
 				String check = HideAndSeek.startcheck;
 				String warp = HideAndSeek.startwarpname;
@@ -219,7 +228,7 @@ public class Commands implements CommandExecutor {
 			}
 			}
 			else {
-				sender.sendMessage("Precise arguments : startgame, setgamelist, setgamewarp, remgamewarp, listwarps");
+				sender.sendMessage("Not enough arguments");
 			}
 		}
 	return false;

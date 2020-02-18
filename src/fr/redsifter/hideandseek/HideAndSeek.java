@@ -1,6 +1,8 @@
 package fr.redsifter.hideandseek;
 
 import java.util.ArrayList;
+import java.util.Set;
+
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -62,6 +64,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		int arg1 = 0;
 		String warp = "";
 		ArrayList<String> newlist = cut(msg);
+		Set<String> warplist = this.getConfig().getConfigurationSection("warps").getKeys(false);
 		if(newlist.contains("startgame")) {
 			if(newlist.size() >= 3) {
 				check = newlist.get(0);
@@ -71,6 +74,9 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 			}
 			else {
 				check = msg;
+			}
+			if((arg1 > 100000 || arg1 < 100) || !warplist.contains(warp)) {
+				return;
 			}
 			startcheck = check;
 			startwarpname = warp;
@@ -161,6 +167,8 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 					for(Player p : players) {
 						p.sendMessage("Not enough players to keep the game going, cancelling...");
 					}
+					deleteTeam("hide");
+					deleteTeam("seek");
 					cancel = true;
 				}
 			}
@@ -170,6 +178,8 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 					for(Player p : players) {
 						p.sendMessage("Not enough players to keep the game going, cancelling...");
 					}
+					deleteTeam("hide");
+					deleteTeam("seek");
 					cancel = true;
 				}
 			}

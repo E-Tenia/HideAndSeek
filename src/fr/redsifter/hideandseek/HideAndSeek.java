@@ -7,6 +7,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -15,10 +16,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.Location;
+import org.bukkit.block.Block;
 
 import fr.redsifter.hideandseek.commands.Commands;
 import fr.redsifter.hideandseek.timer.*;
@@ -202,6 +205,58 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 			deleteTeam("hide");
 			}
 		}
+	}
+	
+	@EventHandler
+	public void onClickTarget(PlayerInteractEvent event) {
+		 Player p=event.getPlayer();
+	     Entity en=getNearestEntityInSight(p,500);
+	     String name1 = p.getName();
+	     String name2 = en.getName();
+		    if(event.getAction()==Action.LEFT_CLICK_AIR && en instanceof Player && hiders.contains(en) && seekers.contains(p)) {
+		    	Bukkit.getPlayerExact(name2).sendMessage(ChatColor.YELLOW + "You got found by " + name1);
+				Bukkit.getPlayerExact(name1).sendMessage(ChatColor.GREEN + "You found " + name2);
+				for(Player p2 : players) {
+					p2.sendMessage(ChatColor.RED + "" + Bukkit.getPlayerExact(name2).getName() + " has been found by " + Bukkit.getPlayerExact(name1).getName());
+				}
+				hiders.remove(Bukkit.getPlayerExact(en.getName()));
+		    }
+		    if(hiders.isEmpty()) {//si tous les hiders on été trouvés on le notifie aux joueurs, on vide les listes restantes et on arrete le chronomètre
+				for (Player p2 : players) {
+					p2.setGameMode(GameMode.SURVIVAL);
+					p2.sendMessage("All the hiders have been found, game over !");
+					general.add(p2);
+				}
+				cancel = true;
+				seekers.clear();
+				players.clear();
+				deleteTeam("seek");
+				deleteTeam("hide");
+		    }
+	}
+	public static Entity getNearestEntityInSight(Player player, int range) {
+	    ArrayList<Entity> entities = (ArrayList<Entity>) player.getNearbyEntities(range, range, range);
+	    System.out.println(entities);
+	    ArrayList<Block> sightBlock = (ArrayList<Block>) player.getLineOfSight(null, range);
+	    ArrayList<Location> sight = new ArrayList<Location>();
+	    for (int i = 0;i<sightBlock.size();i++)
+	        sight.add(sightBlock.get(i).getLocation());
+	    for (int i = 0;i<sight.size();i++) {
+	        for (int k = 0;k<entities.size();k++) {
+	        	
+	            if (Math.abs(entities.get(k).getLocation().getX()-sight.get(i).getX())<1.3) {
+	                if (Math.abs(entities.get(k).getLocation().getY()-sight.get(i).getY())<1.5) {
+	                    if (Math.abs(entities.get(k).getLocation().getZ()-sight.get(i).getZ())<1.3) {
+	                    	if(sightBlock.get(i).isPassable()) {
+	                    		return entities.get(k);
+	                    	}
+	                    }
+	                }
+	            }
+	            
+	        }
+	    }
+	    return null;
 	}
 	
 	@EventHandler

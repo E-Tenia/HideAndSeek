@@ -21,6 +21,7 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -103,6 +104,8 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		initialtime = arg1;
 		timer.time = arg1;
 		timer.lst = lst;
+		timer.hide = hiders;
+		timer.seek = seekers;
 		timer.runTaskTimer(this, 0, 20);
 	}
 	
@@ -340,6 +343,14 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	}
 	
 	@EventHandler
+	public void onPlayerMove(PlayerMoveEvent event) {		
+		if(players.contains(event.getPlayer()) && gamewarp != null && event.getPlayer().getLocation().distanceSquared(gamewarp) > 12000) {
+			event.getPlayer().sendMessage("You are trying to pass through the game area's limits");
+			event.setCancelled(true);
+		}
+	}
+	
+	@EventHandler
 	public void onTimeCheck(EntityRegainHealthEvent event) {
 		Entity ent = event.getEntity();
 		Player player = Bukkit.getPlayerExact(ent.getName());
@@ -371,16 +382,6 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 			deleteTeam("hide");
 			cancel = true;
 			
-		}
-		if(player != null && players.contains(player) && gamewarp != null) {
-			if(player.getLocation().distanceSquared(gamewarp) >= 9500 && player.getLocation().distanceSquared(gamewarp) < 15700) {
-				player.sendMessage(ChatColor.RED + "If you go further from this point you will be teleported back to the game start point");
-				player.addPotionEffect((new PotionEffect(PotionEffectType.SLOW, 100, 5)));
-			}
-			else if(player.getLocation().distanceSquared(gamewarp) >= 15700) {
-				player.sendMessage(ChatColor.RED + "You are not authorized to leave the area");
-				player.teleport(gamewarp);
-			}
 		}
 	}
 	

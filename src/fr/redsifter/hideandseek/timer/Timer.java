@@ -19,9 +19,13 @@ import fr.redsifter.hideandseek.HideAndSeek;
 public class Timer extends BukkitRunnable {
 	private ScoreboardManager manager = Bukkit.getScoreboardManager();
 	final Scoreboard board = manager.getMainScoreboard();
-	final Objective timer = board.registerNewObjective("TIMER", "", ""); 
+	final Objective timer = board.registerNewObjective("TIMER", "", "");
+	final Objective hiders = board.registerNewObjective("HIDERS", "", "");
+	final Objective seekers = board.registerNewObjective("SEEKERS", "", "");
 	public int time;
 	public ArrayList<Player> lst;
+	public ArrayList<Player> hide;
+	public ArrayList<Player> seek;
 	public boolean a = true;
 	@Override
 	public void run() {
@@ -54,18 +58,32 @@ public class Timer extends BukkitRunnable {
 	public void setScoreBoard(Player p) {      
         timer.setDisplaySlot(DisplaySlot.SIDEBAR);
         timer.setDisplayName(ChatColor.DARK_PURPLE + "H&S");
+        hiders.setDisplaySlot(DisplaySlot.SIDEBAR);
+        hiders.setDisplayName(ChatColor.GREEN + "HIDERS");
+        seekers.setDisplaySlot(DisplaySlot.SIDEBAR);
+        seekers.setDisplayName(ChatColor.DARK_RED + "SEEKERS");
         Score score = timer.getScore(ChatColor.DARK_GREEN + "TIMER");
-        score.setScore(time);               
+        Score score2 = hiders.getScore(ChatColor.GREEN + "HIDERS");
+        Score score3 = seekers.getScore(ChatColor.DARK_RED + "SEEKERS");
+        score.setScore(time);
+        score2.setScore(hide.size());
+        score3.setScore(seek.size()); 
         p.setScoreboard(board);
 	}
 	public void updateScoreBoard(Player p) {
 		Score score = timer.getScore(ChatColor.DARK_GREEN + "TIMER");
+		Score score2 = hiders.getScore(ChatColor.GREEN + "HIDERS");
+	    Score score3 = seekers.getScore(ChatColor.DARK_RED + "SEEKERS");
 		score.setScore(time);
+		score2.setScore(hide.size());
+	    score3.setScore(seek.size()); 
 		p.setScoreboard(board);
 	}
 	
 	public void delScoreBoard() { 
         timer.unregister();
+        hiders.unregister();
+        seekers.unregister();
         board.clearSlot(DisplaySlot.SIDEBAR);
 	}
 }

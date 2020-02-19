@@ -1,6 +1,7 @@
 package fr.redsifter.hideandseek;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Set;
 
 import org.bukkit.plugin.java.JavaPlugin;
@@ -44,6 +45,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	public ArrayList<Player> seekers = new ArrayList<Player>();
 	public ArrayList<Player> hiders = new ArrayList<Player>();
 	public ArrayList<Player> general = new ArrayList<Player>();
+	public HashMap<Player,Location> save = new HashMap<Player,Location>();
 	@Override
 	public void onEnable() {
 		System.out.println("Enabling HideAndSeek");
@@ -214,6 +216,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 			cancel = true;
 			seekers.clear();
 			players.clear();
+			save.clear();
 			deleteTeam("seek");
 			deleteTeam("hide");
 			}
@@ -243,6 +246,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 				cancel = true;
 				seekers.clear();
 				players.clear();
+				save.clear();
 				deleteTeam("seek");
 				deleteTeam("hide");
 		    }
@@ -343,10 +347,15 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	}
 	
 	@EventHandler
-	public void onPlayerMove(PlayerMoveEvent event) {		
-		if(players.contains(event.getPlayer()) && gamewarp != null && event.getPlayer().getLocation().distanceSquared(gamewarp) > 12000) {
-			event.getPlayer().sendMessage("You are trying to pass through the game area's limits");
-			event.setCancelled(true);
+	public void onPlayerMove(PlayerMoveEvent event) {
+		if(players.contains(event.getPlayer())) {
+			if(event.getPlayer().getLocation().distanceSquared(gamewarp) > 5000 && event.getPlayer().getLocation().distanceSquared(gamewarp) < 8000) {
+				event.getPlayer().sendMessage("You are trying to pass through the game area's limits");
+				event.getPlayer().teleport(save.get(event.getPlayer()));
+			}
+			else if(event.getPlayer().getLocation().distanceSquared(gamewarp) >= 10300) {
+				event.getPlayer().teleport(gamewarp);
+			}
 		}
 	}
 	
@@ -356,6 +365,14 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		Player player = Bukkit.getPlayerExact(ent.getName());
 		Player closest = hiders.get(0);
 		double current = seekers.get(0).getLocation().distanceSquared(hiders.get(0).getLocation());
+		//assignation tp pour joueur au dela des limites
+		if(players.contains(player) && player.getLocation().distanceSquared(gamewarp) > 3800 && player.getLocation().distanceSquared(gamewarp) < 4500) {
+			if(save.containsKey(player)) {
+				save.remove(player);
+			}
+			save.put(player,player.getLocation());
+		}
+		//assignation cibles boussoles
 		for (Player p : seekers) {
 			for (Player p2 : hiders) {
 				if(p.getLocation().distanceSquared(p2.getLocation()) <= current) {
@@ -378,6 +395,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 			hiders.clear();
 			seekers.clear();
 			players.clear();
+			save.clear();
 			deleteTeam("seek");
 			deleteTeam("hide");
 			cancel = true;

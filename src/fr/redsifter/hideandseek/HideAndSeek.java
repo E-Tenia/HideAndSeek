@@ -30,6 +30,9 @@ import org.bukkit.block.Block;
 import fr.redsifter.hideandseek.commands.Commands;
 import fr.redsifter.hideandseek.timer.*;
 import net.md_5.bungee.api.ChatColor;
+/*import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.HoverEvent;*/
 
 public class HideAndSeek extends JavaPlugin implements Listener{
 	public int initialtime;
@@ -41,10 +44,10 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	public static boolean cancel;
 	public static boolean run;
 	public static Location gamewarp;
-	public ArrayList<Player> players = new ArrayList<Player>();
+	public static ArrayList<Player> players = new ArrayList<Player>();
 	public static ArrayList<Player> seekers = new ArrayList<Player>();
 	public static ArrayList<Player> hiders = new ArrayList<Player>();
-	public ArrayList<Player> general = new ArrayList<Player>();
+	public static ArrayList<Player> general = new ArrayList<Player>();
 	public HashMap<Player,Location> save = new HashMap<Player,Location>();
 	@Override
 	public void onEnable() {

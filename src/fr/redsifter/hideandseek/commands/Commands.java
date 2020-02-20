@@ -13,6 +13,11 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
 import fr.redsifter.hideandseek.HideAndSeek;
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 
 public class Commands implements CommandExecutor {
 	private HideAndSeek main;
@@ -243,15 +248,21 @@ public class Commands implements CommandExecutor {
 				break;
 			case "addplayer":
 				if(HideAndSeek.gamewarp == null) {
-					if(Bukkit.getPlayerExact(args[0]) instanceof Player) {
-						boolean a = true;
-						if(args[1].equalsIgnoreCase("seeker")) {
-							HideAndSeek.seekers.add(Bukkit.getPlayerExact(args[0]));
-							a = teamAdd(args[1],"seek");
+					if(Bukkit.getPlayerExact(args[1]) instanceof Player) {
+						if(HideAndSeek.players.contains(Bukkit.getPlayerExact(args[1]))) {
+							sender.sendMessage("This player is already in a game");
+							return true;
 						}
-						else if(args[1].equalsIgnoreCase("hider")) {
-							HideAndSeek.hiders.add(Bukkit.getPlayerExact(args[0]));
-							a = teamAdd(args[1],"hide");
+						boolean a = true;
+						if(args[2].equalsIgnoreCase("seeker")) {
+							HideAndSeek.players.add(Bukkit.getPlayerExact(args[1]));
+							HideAndSeek.seekers.add(Bukkit.getPlayerExact(args[1]));
+							a = teamAdd(args[2],"seek");
+						}
+						else if(args[2].equalsIgnoreCase("hider")) {
+							HideAndSeek.players.add(Bukkit.getPlayerExact(args[1]));
+							HideAndSeek.hiders.add(Bukkit.getPlayerExact(args[1]));
+							a = teamAdd(args[2],"hide");
 						}
 						else {
 							sender.sendMessage("Invalid role, please choose between seeker and hider");
@@ -270,6 +281,69 @@ public class Commands implements CommandExecutor {
 				else {
 					sender.sendMessage("The game already started");
 				}
+				break;
+			case "join":
+				if(sender instanceof Player) {
+					Player player = Bukkit.getPlayerExact(sender.getName());
+					if(HideAndSeek.players.contains(Bukkit.getPlayerExact(sender.getName()))) {
+						sender.sendMessage("You are already in a game");
+						return true;
+					}
+					boolean a = true;
+					if(args[1].equalsIgnoreCase("seek")) {
+						HideAndSeek.players.add(player);
+						HideAndSeek.seekers.add(player);
+						a = teamAdd(player.getName(),"seek");
+					}
+					else if(args[1].equalsIgnoreCase("hide")) {
+						HideAndSeek.players.add(player);
+						HideAndSeek.hiders.add(player);
+						a = teamAdd(player.getName(),"hide");
+					}
+					else {
+						if (HideAndSeek.seekers.size() > HideAndSeek.hiders.size()) {
+							HideAndSeek.players.add(player);
+							HideAndSeek.hiders.add(player);
+							a = teamAdd(player.getName(),"hide");
+						}
+						else if (HideAndSeek.seekers.size() < HideAndSeek.hiders.size()) {
+							HideAndSeek.players.add(player);
+							HideAndSeek.seekers.add(player);
+							a = teamAdd(player.getName(),"seek");
+						}
+						else {
+							double r = Math.random();
+							if(r > 0.5) {
+								HideAndSeek.players.add(player);
+								HideAndSeek.seekers.add(player);
+								a = teamAdd(player.getName(),"seek");
+							}
+							else {
+								HideAndSeek.players.add(player);
+								HideAndSeek.hiders.add(player);
+								a = teamAdd(player.getName(),"hide");
+							}
+						}
+					}
+					if(a) {
+						sender.sendMessage("Joined successfully");
+					}
+					else {
+						sender.sendMessage("No game is set");
+					}
+
+				}
+				else {
+					sender.sendMessage("You must be a player to perform this command");
+				}
+				break;
+			case "sendinvite":
+					TextComponent m = new TextComponent(ChatColor.MAGIC + "JOIN GAME (RANDOM ROLE)");
+					m.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Join").create()));
+					m.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/hs join"));
+					for(Player player : HideAndSeek.general) {
+						player.spigot().sendMessage(m);
+					}
 				break;
 			default:
 				sender.sendMessage("Unknown hs command");

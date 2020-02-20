@@ -42,8 +42,8 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	public static boolean run;
 	public static Location gamewarp;
 	public ArrayList<Player> players = new ArrayList<Player>();
-	public ArrayList<Player> seekers = new ArrayList<Player>();
-	public ArrayList<Player> hiders = new ArrayList<Player>();
+	public static ArrayList<Player> seekers = new ArrayList<Player>();
+	public static ArrayList<Player> hiders = new ArrayList<Player>();
 	public ArrayList<Player> general = new ArrayList<Player>();
 	public HashMap<Player,Location> save = new HashMap<Player,Location>();
 	@Override
@@ -226,7 +226,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	@EventHandler
 	public void onClickTarget(PlayerInteractEvent event) {
 		 Player p=event.getPlayer();
-	     Entity en=getNearestEntityInSight(p,500);
+	     Entity en=getNearestEntityInSight(p,50);
 	     String name1 = p.getName();
 	     String name2 = en.getName();
 		    if(event.getAction()==Action.LEFT_CLICK_AIR && en instanceof Player && hiders.contains(en) && seekers.contains(p)) {

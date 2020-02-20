@@ -104,6 +104,24 @@ public class Commands implements CommandExecutor {
 		}
 	}
 	
+	private boolean teamAdd(String p,String nm) {
+		Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+		Team team = null;
+		for (Team t : scoreboard.getTeams()) {
+			if (t.getName().equals(nm)) {
+				team = t;
+				break;
+			}
+		}
+		if (team != null) {
+			team.addEntry(p);
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String msg, String[] args) {
 		if (cmd.getName().equalsIgnoreCase("hs")){
@@ -214,6 +232,7 @@ public class Commands implements CommandExecutor {
 				String name = args[1];
 				main.getConfig().set("warps."+name, null);
 				main.saveConfig();
+				sender.sendMessage("Warp set successfuly");
 				break;
 			case "listwarps":
 				Set<String> warps = main.getConfig().getConfigurationSection("warps").getKeys(false);
@@ -222,8 +241,38 @@ public class Commands implements CommandExecutor {
 					sender.sendMessage(s);
 				}
 				break;
+			case "addplayer":
+				if(HideAndSeek.gamewarp == null) {
+					if(Bukkit.getPlayerExact(args[0]) instanceof Player) {
+						boolean a = true;
+						if(args[1].equalsIgnoreCase("seeker")) {
+							HideAndSeek.seekers.add(Bukkit.getPlayerExact(args[0]));
+							a = teamAdd(args[1],"seek");
+						}
+						else if(args[1].equalsIgnoreCase("hider")) {
+							HideAndSeek.hiders.add(Bukkit.getPlayerExact(args[0]));
+							a = teamAdd(args[1],"hide");
+						}
+						else {
+							sender.sendMessage("Invalid role, please choose between seeker and hider");
+						}
+						if(a) {
+							sender.sendMessage("Player added successfully");
+						}
+						else {
+							sender.sendMessage("No game is set");
+						}
+					}
+					else {
+						sender.sendMessage("This player is not here");
+					}
+				}
+				else {
+					sender.sendMessage("The game already started");
+				}
+				break;
 			default:
-				sender.sendMessage("Unknown command");
+				sender.sendMessage("Unknown hs command");
 				break;
 			}
 			}

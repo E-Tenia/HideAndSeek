@@ -168,7 +168,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	@EventHandler
 	public void onClickTarget(PlayerInteractEvent event) {
 		 Player p=event.getPlayer();
-	     Entity en=getNearestEntityInSight(p,150);
+	     Entity en=getNearestEntityInSight(p,100);
 	     if(players.contains(p) && time < initialtime-60) {
 	     String name1 = p.getName();
 	     if(en != null) {
@@ -265,7 +265,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		Entity ent = event.getEntity();
 		Player player = Bukkit.getPlayerExact(ent.getName());
 		Player closest = null;//hiders.get(0);
-		double current = 800;//seekers.get(0).getLocation().distanceSquared(hiders.get(0).getLocation());
+		double current = 15000;//seekers.get(0).getLocation().distanceSquared(hiders.get(0).getLocation());
 		//assignation tp pour joueur au dela des limites
 		if(players.contains(player)) {
 		if(players.contains(player) && player.getLocation().distanceSquared(gamewarp) > 13800 && player.getLocation().distanceSquared(gamewarp) < 14500) {
@@ -288,7 +288,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 				Location loc = new Location(closest.getLocation().getWorld(),closest.getLocation().getX(),closest.getLocation().getY(),closest.getLocation().getZ());
 				p.setCompassTarget(loc);
 			}
-			current = 800;
+			current = 15000;
 		}
 		if(time == 0 && player != null && players.contains(player)) {
 			for(Player p : players) {

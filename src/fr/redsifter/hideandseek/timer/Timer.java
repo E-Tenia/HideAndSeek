@@ -42,8 +42,8 @@ public class Timer extends BukkitRunnable {
 			for (Player p : lst) {
 				p.addPotionEffect((new PotionEffect(PotionEffectType.HEAL, 1, 10)));
 				p.setFoodLevel(20);
-				HideAndSeek.gamewarp = null;
 			}
+			HideAndSeek.gamewarp = null;
 			delScoreBoard();
 			cancel();
 		}

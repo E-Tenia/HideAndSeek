@@ -214,17 +214,17 @@ public class Commands implements CommandExecutor {
 				String[] hiders = new String[init2];
 				String[] seekers = new String[init1];
 				for(j = 0;j < purged.length;j++) {
-					HideAndSeek.players.add(Bukkit.getPlayerExact(purged[i]));
-					if (j > purged.length) {
+					HideAndSeek.players.add(Bukkit.getPlayerExact(purged[j]));
+					if (j >= purged.length/2) {
 						sender.sendMessage("Inviting " + gamelist[j] + " as Hider !");
-						HideAndSeek.hiders.add(Bukkit.getPlayerExact(purged[i]));
-						hiders[b] = gamelist[j];
+						HideAndSeek.hiders.add(Bukkit.getPlayerExact(purged[j]));
+						hiders[b] = purged[j];
 						b++;
 					}
 					else{
 						sender.sendMessage("Inviting " + gamelist[j] + " as Seeker !");
-						HideAndSeek.seekers.add(Bukkit.getPlayerExact(purged[i]));
-						seekers[a] = gamelist[j];
+						HideAndSeek.seekers.add(Bukkit.getPlayerExact(purged[j]));
+						seekers[a] = purged[j];
 						a++;
 					}
 				}

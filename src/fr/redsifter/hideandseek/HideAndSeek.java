@@ -229,13 +229,18 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 			event.setCancelled(true);//si oui chat général désactivé
 			if(hiders.contains(player)) {//si le joueur est hider on envoie son message dans le groupe hider
 				for (Player p: hiders) {
-					p.sendMessage(ChatColor.DARK_PURPLE + "<hs>" + msg);
+					p.sendMessage(ChatColor.DARK_PURPLE + "<hs>"+ ChatColor.DARK_GREEN + "[HIDERS]" + ChatColor.WHITE + msg);
 				}
 			}
 			else if(seekers.contains(player)) {//si le joueur est seeker on envoie son message dans le groupe seeker
 				event.setCancelled(true);
 				for (Player p: seekers) {
-					p.sendMessage(ChatColor.DARK_PURPLE+ "<hs>" + msg);
+					p.sendMessage(ChatColor.DARK_PURPLE+ "<hs>" + ChatColor.DARK_RED + "[SEEKERS]"+ ChatColor.WHITE + msg);
+				}
+			}
+			else {
+				for (Player p: players) {
+					p.sendMessage(ChatColor.DARK_PURPLE+ "<hs>" + ChatColor.WHITE + msg);
 				}
 			}
 		}
@@ -249,14 +254,17 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	
 	@EventHandler
 	public void onPlayerMove(PlayerMoveEvent event) {
-		if(players.contains(event.getPlayer())) {
-			if(event.getPlayer().getLocation().distanceSquared(gamewarp) > 15000 && event.getPlayer().getLocation().distanceSquared(gamewarp) < 18000) {
-				event.getPlayer().sendMessage("You are trying to pass through the game area's limits");
-				event.getPlayer().teleport(save.get(event.getPlayer()));
+		Player player = event.getPlayer();
+		if(player != null) {
+		if(players.contains(player)) {
+			if(player.getLocation().distanceSquared(gamewarp) > 15000 && player.getLocation().distanceSquared(gamewarp) < 18000) {
+				player.sendMessage("You are trying to pass through the game area's limits");
+				player.getPlayer().teleport(save.get(player));
 			}
-			else if(event.getPlayer().getLocation().distanceSquared(gamewarp) >= 20300) {
-				event.getPlayer().teleport(gamewarp);
+			else if(player.getLocation().distanceSquared(gamewarp) >= 20300) {
+				player.teleport(gamewarp);
 			}
+		}
 		}
 	}
 	

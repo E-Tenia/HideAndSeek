@@ -17,6 +17,7 @@ import org.bukkit.scoreboard.Team;
 
 import fr.redsifter.hideandseek.HideAndSeek;
 import fr.redsifter.hideandseek.timer.Timer;
+import fr.redsifter.hideandseek.timer.Wait;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -149,8 +150,13 @@ public class Commands implements CommandExecutor {
 	public boolean onCommand(CommandSender sender, Command cmd, String msg, String[] args) {
 		if (cmd.getName().equalsIgnoreCase("hs")){
 			if(args.length > 0) {
+			Wait wait = new Wait();
 			switch(args[0]) {
 			case "startgame":
+				if(HideAndSeek.hiders.isEmpty() || HideAndSeek.seekers.isEmpty()) {
+					sender.sendMessage("Can't start an empty game");
+					return true;
+				}
 				Set<String> warplist = main.getConfig().getConfigurationSection("warps").getKeys(false);
 				int arg1 = Integer.parseInt(args[1].trim());
 				if(args.length < 3) {
@@ -236,26 +242,36 @@ public class Commands implements CommandExecutor {
 				}
 				break;
 			case "setgame":
+				if(HideAndSeek.set == true) {
+					sender.sendMessage("A game is already set");
+					return true;
+				}
+				if(args.length > 1) {
+				int time = Integer.parseInt(args[1].trim());
+					if(time < 20 || time > 100) {
+						sender.sendMessage("You must precise a time amount between 20 and 100 seconds");
+						return true;
+					}	
 				HideAndSeek.set = true;
 				Bukkit.broadcastMessage(ChatColor.GOLD + "A NEW GAME OF H&S IS SET");
-				TextComponent m = new TextComponent(ChatColor.DARK_PURPLE + "JOIN GAME AS" + ChatColor.MAGIC + " RANDOM ROLE");
+				TextComponent m = new TextComponent(ChatColor.DARK_PURPLE + "[JOIN GAME]");
 				m.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Join").create()));
 				m.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/hs join"));
-				
-				TextComponent m2 = new TextComponent(ChatColor.DARK_RED + "JOIN GAME (SEEKER)");
-				m2.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Join").create()));
-				m2.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/hs join seek"));
-				
-				TextComponent m3 = new TextComponent(ChatColor.DARK_GREEN + "JOIN GAME AS HIDER");
-				m3.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,new ComponentBuilder("Join").create()));
-				m3.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,"/hs join hide"));
 				for(Player player : HideAndSeek.general) {
 					player.spigot().sendMessage(m);
-					player.spigot().sendMessage(m2);
-					player.spigot().sendMessage(m3);
 				}
 				createTeam("hide",null);
 				createTeam("seek",null);
+				wait.time = time;
+				wait.runTaskTimer(main,0,20);
+				}
+				else {
+					sender.sendMessage("You must precise a time amount");
+					return true;
+				}
+				break;
+			case "cancelgame":
+				wait.cancel = true;
 				break;
 			case "setgamewarp":
 				if (sender instanceof Player) {
@@ -361,7 +377,10 @@ public class Commands implements CommandExecutor {
 						sender.sendMessage("You are already in a game");
 						return true;
 					}
-					boolean a = true;
+					HideAndSeek.general.remove(player);
+					HideAndSeek.players.add(player);
+					System.out.println(HideAndSeek.players);
+					/*boolean a = true;
 					if(args.length <= 1) {
 						if (HideAndSeek.seekers.size() > HideAndSeek.hiders.size()) {
 							a = teamAdd(player.getName(),"hide");
@@ -408,14 +427,8 @@ public class Commands implements CommandExecutor {
 							HideAndSeek.players.add(player);
 							HideAndSeek.hiders.add(player);
 						}
-					}
-					if(a) {
-						HideAndSeek.general.remove(player);
-						sender.sendMessage("Joined successfully");
-					}
-					else {
-						sender.sendMessage("No game is set");
-					}
+					}*/	
+					sender.sendMessage("Joined successfully");
 
 				}
 				else {

@@ -23,6 +23,7 @@ public class Timer extends BukkitRunnable {
 	public int time;
 	public ArrayList<Player> lst;
 	public boolean a = true;
+	
 	@Override
 	public void run() {
 		if(a) {
@@ -48,7 +49,6 @@ public class Timer extends BukkitRunnable {
 			cancel();
 		}
 		time--;
-
 	}
 	public void setScoreBoard(Player p) {      
         timer.setDisplaySlot(DisplaySlot.SIDEBAR);

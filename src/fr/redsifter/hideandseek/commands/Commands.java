@@ -165,9 +165,6 @@ public class Commands implements CommandExecutor {
 					sender.sendMessage("You didn't set that game");
 					return true;
 				}
-				if(HideAndSeek.cancel == true) {
-					HideAndSeek.cancel = false;
-				}
 				if(HideAndSeek.hiders.isEmpty() || HideAndSeek.seekers.isEmpty()) {
 					sender.sendMessage("Can't start an empty game");
 					return true;
@@ -189,6 +186,8 @@ public class Commands implements CommandExecutor {
 					return true;
 				}
 				HideAndSeek.gamewarp = location;
+				System.out.println(HideAndSeek.gamewarp);
+				System.out.println(HideAndSeek.players);
 				for(Player p : players) {
 					p.teleport(location);
 				}

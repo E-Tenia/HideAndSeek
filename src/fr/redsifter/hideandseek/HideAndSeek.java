@@ -161,6 +161,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 			save.clear();
 			deleteTeam("seek");
 			deleteTeam("hide");
+			HideAndSeek.gamewarp = null;
 			}
 		}
 	}
@@ -194,6 +195,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 				save.clear();
 				deleteTeam("seek");
 				deleteTeam("hide");
+				HideAndSeek.gamewarp = null;
 		    }
 	     }
 	}
@@ -229,18 +231,18 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 			event.setCancelled(true);//si oui chat général désactivé
 			if(hiders.contains(player)) {//si le joueur est hider on envoie son message dans le groupe hider
 				for (Player p: hiders) {
-					p.sendMessage(ChatColor.DARK_PURPLE + "<hs>"+ ChatColor.DARK_GREEN + "[HIDERS]" + ChatColor.WHITE + msg);
+					p.sendMessage(ChatColor.DARK_PURPLE + "<hs>"+ ChatColor.DARK_GREEN + "[HIDERS]"  + ChatColor.DARK_PURPLE+ "[" + player.getName() +  "]" + ChatColor.WHITE + msg);
 				}
 			}
 			else if(seekers.contains(player)) {//si le joueur est seeker on envoie son message dans le groupe seeker
 				event.setCancelled(true);
 				for (Player p: seekers) {
-					p.sendMessage(ChatColor.DARK_PURPLE+ "<hs>" + ChatColor.DARK_RED + "[SEEKERS]"+ ChatColor.WHITE + msg);
+					p.sendMessage(ChatColor.DARK_PURPLE+ "<hs>" + ChatColor.DARK_RED + "[SEEKERS]" + ChatColor.DARK_PURPLE+ "[" + player.getName() +  "]" + ChatColor.WHITE + msg);
 				}
 			}
 			else {
 				for (Player p: players) {
-					p.sendMessage(ChatColor.DARK_PURPLE+ "<hs>" + ChatColor.WHITE + msg);
+					p.sendMessage(ChatColor.DARK_PURPLE+ "<hs>" +  "[" + player.getName() +  "]" + ChatColor.WHITE + msg);
 				}
 			}
 		}
@@ -312,6 +314,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 			deleteTeam("seek");
 			deleteTeam("hide");
 			cancel = true;
+			HideAndSeek.gamewarp = null;
 			
 		}
 		}

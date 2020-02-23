@@ -25,6 +25,8 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 
 public class Commands implements CommandExecutor {
+	public Wait wait = new Wait();
+	public Player startplayer;
 	private HideAndSeek main;
 	
 	public Commands(HideAndSeek hideAndSeek) {
@@ -150,9 +152,22 @@ public class Commands implements CommandExecutor {
 	public boolean onCommand(CommandSender sender, Command cmd, String msg, String[] args) {
 		if (cmd.getName().equalsIgnoreCase("hs")){
 			if(args.length > 0) {
-			Wait wait = new Wait();
 			switch(args[0]) {
 			case "startgame":
+				if(!wait.startable) {
+					sender.sendMessage("Game is not yet startable");
+					return true;
+				}
+				else {
+					wait.startable = false;
+				}
+				if(sender != startplayer) {
+					sender.sendMessage("You didn't set that game");
+					return true;
+				}
+				if(HideAndSeek.cancel == true) {
+					HideAndSeek.cancel = false;
+				}
 				if(HideAndSeek.hiders.isEmpty() || HideAndSeek.seekers.isEmpty()) {
 					sender.sendMessage("Can't start an empty game");
 					return true;
@@ -190,6 +205,7 @@ public class Commands implements CommandExecutor {
 					p.sendMessage(ChatColor.GOLD + "You have 1 min to get as far as possible and hide");
 					}
 				startTimer(arg1,HideAndSeek.players);
+				startplayer = null;
 				break;
 			case "setgamelist":
 				if (args.length > 1) {
@@ -242,6 +258,9 @@ public class Commands implements CommandExecutor {
 				}
 				break;
 			case "setgame":
+				if(sender instanceof Player) {
+					startplayer = Bukkit.getPlayerExact(sender.getName());
+				}
 				if(HideAndSeek.set == true) {
 					sender.sendMessage("A game is already set");
 					return true;
@@ -262,6 +281,7 @@ public class Commands implements CommandExecutor {
 				}
 				createTeam("hide",null);
 				createTeam("seek",null);
+				wait = new Wait();
 				wait.time = time;
 				wait.runTaskTimer(main,0,20);
 				}
@@ -271,7 +291,16 @@ public class Commands implements CommandExecutor {
 				}
 				break;
 			case "cancelgame":
-				wait.cancel = true;
+				if(HideAndSeek.set == true) {
+					wait.cancel = true;
+					HideAndSeek.set = false;
+				}
+				else {
+					HideAndSeek.cancel = true;
+				}
+				HideAndSeek.deleteTeam("seek");
+				HideAndSeek.deleteTeam("hide");
+				Bukkit.broadcastMessage(ChatColor.GOLD + "H&S GAME WAS CANCELLED");
 				break;
 			case "setgamewarp":
 				if (sender instanceof Player) {
@@ -379,7 +408,8 @@ public class Commands implements CommandExecutor {
 					}
 					HideAndSeek.general.remove(player);
 					HideAndSeek.players.add(player);
-					System.out.println(HideAndSeek.players);
+					Bukkit.broadcastMessage(ChatColor.GOLD + player.getName() + " joined the H&S game");
+					wait.newplayer = player;
 					/*boolean a = true;
 					if(args.length <= 1) {
 						if (HideAndSeek.seekers.size() > HideAndSeek.hiders.size()) {

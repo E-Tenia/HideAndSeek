@@ -78,7 +78,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		
 	}
 	
-	private void deleteTeam(String nm) {
+	public static void deleteTeam(String nm) {
 		Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
 		
 		for (Team t : scoreboard.getTeams()) {
@@ -298,6 +298,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 			}
 			current = 15000;
 		}
+		//si timer arrive à 0
 		if(time == 0 && player != null && players.contains(player)) {
 			for(Player p : players) {
 				p.setGameMode(GameMode.SURVIVAL);

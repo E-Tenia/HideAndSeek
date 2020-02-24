@@ -4,6 +4,8 @@ import java.util.ArrayList;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -33,6 +35,7 @@ public class Timer extends BukkitRunnable {
 			a = false;
 		}
 		HideAndSeek.time = time;
+		setCompass();
 		for (Player p : lst) {
 			updateScoreBoard(p);
 			p.addPotionEffect((new PotionEffect(PotionEffectType.HEAL, 1, 10)));
@@ -44,6 +47,21 @@ public class Timer extends BukkitRunnable {
 				p.addPotionEffect((new PotionEffect(PotionEffectType.HEAL, 1, 10)));
 				p.setFoodLevel(20);
 			}
+			 if(HideAndSeek.hiders.isEmpty()){
+				 for(Player p : HideAndSeek.players) {
+						p.setGameMode(GameMode.SURVIVAL);
+						p.sendMessage("The hiders won !");
+						HideAndSeek.general.add(p);
+					}
+					HideAndSeek.hiders.clear();
+					HideAndSeek.seekers.clear();
+					HideAndSeek.players.clear();
+					HideAndSeek.save.clear();
+					HideAndSeek.deleteTeam("seek");
+					HideAndSeek.deleteTeam("hide");
+					HideAndSeek.cancel = true;
+					HideAndSeek.gamewarp = null;
+			 }
 			delScoreBoard();
 			cancel();
 		}
@@ -65,5 +83,27 @@ public class Timer extends BukkitRunnable {
 	public void delScoreBoard() { 
         timer.unregister();
         board.clearSlot(DisplaySlot.SIDEBAR);
+	}
+	
+	public void setCompass() {
+		Player closest = null;//hiders.get(0);
+		double current = 15000;//seekers.get(0).getLocation().distanceSquared(hiders.get(0).getLocation());
+		
+		//assignation cibles boussoles
+		for (Player p : HideAndSeek.seekers) {
+			for (Player p2 : HideAndSeek.hiders) {
+				if(p.getLocation().distanceSquared(p2.getLocation()) <= current) {
+					current = p.getLocation().distanceSquared(p2.getLocation());
+					closest = p2;
+				}
+				
+			}
+			
+			if(closest != null) {
+				Location loc = new Location(closest.getLocation().getWorld(),closest.getLocation().getX(),closest.getLocation().getY(),closest.getLocation().getZ());
+				p.setCompassTarget(loc);
+			}
+			current = 15000;
+		}
 	}
 }

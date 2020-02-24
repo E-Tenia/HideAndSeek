@@ -16,7 +16,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -37,7 +36,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	public static ArrayList<Player> seekers = new ArrayList<Player>();
 	public static ArrayList<Player> hiders = new ArrayList<Player>();
 	public static ArrayList<Player> general = new ArrayList<Player>();
-	public HashMap<Player,Location> save = new HashMap<Player,Location>();
+	public static HashMap<Player,Location> save = new HashMap<Player,Location>();
 	@Override
 	public void onEnable() {
 		System.out.println("Enabled HideAndSeek");
@@ -257,8 +256,14 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	@EventHandler
 	public void onPlayerMove(PlayerMoveEvent event) {
 		Player player = event.getPlayer();
-		if(player != null) {
+		if(player != null && gamewarp != null) {
 		if(players.contains(player)) {
+			if(player.getLocation().distanceSquared(gamewarp) > 13800 && player.getLocation().distanceSquared(gamewarp) < 14500) {
+				if(save.containsKey(player)) {
+					save.remove(player);
+				}
+				save.put(player,player.getLocation());
+			}
 			if(player.getLocation().distanceSquared(gamewarp) > 15000 && player.getLocation().distanceSquared(gamewarp) < 18000) {
 				player.sendMessage("You are trying to pass through the game area's limits");
 				player.getPlayer().teleport(save.get(player));
@@ -266,56 +271,6 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 			else if(player.getLocation().distanceSquared(gamewarp) >= 20300) {
 				player.teleport(gamewarp);
 			}
-		}
-		}
-	}
-	
-	@EventHandler
-	public void onTimeCheck(EntityRegainHealthEvent event) {
-		Entity ent = event.getEntity();
-		Player player = Bukkit.getPlayerExact(ent.getName());
-		Player closest = null;//hiders.get(0);
-		double current = 15000;//seekers.get(0).getLocation().distanceSquared(hiders.get(0).getLocation());
-		//assignation tp pour joueur au dela des limites
-		if(players.contains(player)) {
-		if(players.contains(player) && player.getLocation().distanceSquared(gamewarp) > 13800 && player.getLocation().distanceSquared(gamewarp) < 14500) {
-			if(save.containsKey(player)) {
-				save.remove(player);
-			}
-			save.put(player,player.getLocation());
-		}
-		//assignation cibles boussoles
-		for (Player p : seekers) {
-			for (Player p2 : hiders) {
-				if(p.getLocation().distanceSquared(p2.getLocation()) <= current) {
-					current = p.getLocation().distanceSquared(p2.getLocation());
-					closest = p2;
-				}
-				
-			}
-			
-			if(closest != null) {
-				Location loc = new Location(closest.getLocation().getWorld(),closest.getLocation().getX(),closest.getLocation().getY(),closest.getLocation().getZ());
-				p.setCompassTarget(loc);
-			}
-			current = 15000;
-		}
-		//si timer arrive à 0
-		if(time == 0 && player != null && players.contains(player)) {
-			for(Player p : players) {
-				p.setGameMode(GameMode.SURVIVAL);
-				p.sendMessage("The hiders won !");
-				general.add(p);
-			}
-			hiders.clear();
-			seekers.clear();
-			players.clear();
-			save.clear();
-			deleteTeam("seek");
-			deleteTeam("hide");
-			cancel = true;
-			HideAndSeek.gamewarp = null;
-			
 		}
 		}
 	}

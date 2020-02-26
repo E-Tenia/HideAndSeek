@@ -6,6 +6,8 @@ import java.util.Set;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -163,10 +165,12 @@ public class Commands implements CommandExecutor {
 				}
 				if(sender != startplayer) {
 					sender.sendMessage("You didn't set that game");
+					wait.startable = true;
 					return true;
 				}
 				if(HideAndSeek.hiders.isEmpty() || HideAndSeek.seekers.isEmpty()) {
 					sender.sendMessage("Can't start an empty game");
+					wait.startable = true;
 					return true;
 				}
 				Set<String> warplist = main.getConfig().getConfigurationSection("warps").getKeys(false);
@@ -176,6 +180,7 @@ public class Commands implements CommandExecutor {
 				}
 				else if((arg1 > 100000 || arg1 < 100) || !warplist.contains(args[2])) {
 					sender.sendMessage("Invalid parameters, you must precise a time amount between 100000 and 100 and a valid warp (to list warp, use \"/hs listwarps\")");
+					wait.startable = true;
 					return true;
 				}	
 				sender.sendMessage("Starting new game of hide and seek !");
@@ -183,6 +188,7 @@ public class Commands implements CommandExecutor {
 				Location location = main.getConfig().getLocation("warps."+args[2]+".Location");
 				if(location == null) {
 					sender.sendMessage("Invalid warp name, aborting...");
+					wait.startable = true;
 					return true;
 				}
 				HideAndSeek.gamewarp = location;
@@ -299,6 +305,12 @@ public class Commands implements CommandExecutor {
 				}
 				HideAndSeek.deleteTeam("seek");
 				HideAndSeek.deleteTeam("hide");
+				for(Player p : HideAndSeek.players) {
+					HideAndSeek.general.add(p);
+				}
+				HideAndSeek.players.clear();
+				HideAndSeek.seekers.clear();
+				HideAndSeek.hiders.clear();
 				Bukkit.broadcastMessage(ChatColor.GOLD + "H&S GAME WAS CANCELLED");
 				break;
 			case "setgamewarp":
@@ -312,6 +324,7 @@ public class Commands implements CommandExecutor {
 					String name = args[1];
 					main.getConfig().set("warps."+ name,name);
 					main.getConfig().set("warps." + name + ".Location",loc);
+					main.saveConfig();
 					sender.sendMessage("Warp set successfuly");
 				}
 				break;
@@ -333,6 +346,10 @@ public class Commands implements CommandExecutor {
 				break;
 			case "listwarps":
 				Set<String> warps = main.getConfig().getConfigurationSection("warps").getKeys(false);
+				if(warps == null) {
+					sender.sendMessage("There are no warps");
+					return true;
+				}
 				sender.sendMessage("Available warps : ");
 				for (String s : warps) {
 					sender.sendMessage(s);
@@ -409,59 +426,82 @@ public class Commands implements CommandExecutor {
 					HideAndSeek.players.add(player);
 					Bukkit.broadcastMessage(ChatColor.GOLD + player.getName() + " joined the H&S game");
 					wait.newplayer = player;
-					/*boolean a = true;
-					if(args.length <= 1) {
-						if (HideAndSeek.seekers.size() > HideAndSeek.hiders.size()) {
-							a = teamAdd(player.getName(),"hide");
-							if(a) {
-								HideAndSeek.players.add(player);
-								HideAndSeek.hiders.add(player);
-							}
-						}
-						else if (HideAndSeek.seekers.size() < HideAndSeek.hiders.size()) {
-							a = teamAdd(player.getName(),"seek");
-							if(a) {
-								HideAndSeek.players.add(player);
-								HideAndSeek.seekers.add(player);
-							}
-						}
-						else {
-							double r = Math.random();
-							if(r > 0.5) {
-								a = teamAdd(player.getName(),"seek");
-								if(a) {
-									HideAndSeek.players.add(player);
-									HideAndSeek.seekers.add(player);
-								}
-							}
-							else {
-								a = teamAdd(player.getName(),"hide");
-								if(a){
-									HideAndSeek.players.add(player);
-									HideAndSeek.hiders.add(player);
-								}
-							}
-						}
-					}
-					else if(args[1].equalsIgnoreCase("seek")) {
-						a = teamAdd(player.getName(),"seek");
-						if(a) {
-							HideAndSeek.players.add(player);
-							HideAndSeek.seekers.add(player);
-						}
-					}
-					else if(args[1].equalsIgnoreCase("hide")) {
-						a = teamAdd(player.getName(),"hide");
-						if(a) {
-							HideAndSeek.players.add(player);
-							HideAndSeek.hiders.add(player);
-						}
-					}*/	
 					sender.sendMessage("Joined successfully");
 
 				}
 				else {
 					sender.sendMessage("You must be a player to perform this command");
+				}
+				break;
+			case "setchest":
+				if(!(sender instanceof Player)) {
+					sender.sendMessage("Only a player can perform this command");
+					return true;
+				}
+				Block chest = Bukkit.getPlayerExact(sender.getName()).getTargetBlockExact(3);
+				
+				int id = 0;
+				if(args.length == 2) {
+					id = Integer.parseInt(args[1].trim());
+				}
+				else {
+					sender.sendMessage("You must precise an id");
+				}
+				if(id < 0 || id > 10000) {
+					sender.sendMessage("You must precise an id between 0 and 100000");
+					return true;
+				}
+				if(chest.getBlockData().getMaterial() != Material.CHEST || chest == null) {
+					sender.sendMessage("You are not looking at any chest");
+				}
+				main.getConfig().set("chests."+ id,id);
+				main.getConfig().set("chests." + id,chest.getLocation());
+				main.saveConfig();
+				HideAndSeek.chestsave.put(main.getConfig().getLocation("chests."+id), true);
+				sender.sendMessage("You successfuly set the chest " + id);
+				HideAndSeek.chest = null;
+				break;
+			case "remchest":
+				int id2 = Integer.parseInt(args[1].trim());
+				if(id2 < 0 || id2 > 10000) {
+					sender.sendMessage("You must precise an id between 0 and 100000");
+					return true;
+				}
+				
+				Set<String> chestset = main.getConfig().getConfigurationSection("chests").getKeys(false);
+				if(chestset.contains(args[1])) {
+					main.getConfig().set("chests."+ id2,null);
+					main.saveConfig();
+					sender.sendMessage("Chest removed successfuly");
+				}
+				else {
+					sender.sendMessage("This chest doesn't exist");
+				}
+				break;
+			case "listchests":
+				Set<String> chests = main.getConfig().getConfigurationSection("chests").getKeys(false);
+				sender.sendMessage("Available chests : ");
+				for (String s : chests) {
+					sender.sendMessage(s + " : " + main.getConfig().getLocation("chests."+s));
+				}
+				break;
+			case "tpchest":
+				if(!(sender instanceof Player)) {
+					sender.sendMessage("Only a player can perform this command");
+					return true;
+				}
+				Set<String> chestlist = main.getConfig().getConfigurationSection("chests").getKeys(false);
+				Player player = Bukkit.getPlayerExact(sender.getName());
+				int id3 = Integer.parseInt(args[1].trim());
+				if(id3 < 0 || id3 > 10000) {
+					sender.sendMessage("You must precise an id between 0 and 100000");
+					return true;
+				}
+				if(chestlist.contains(args[1])) {
+					player.teleport(main.getConfig().getLocation("chests."+ id3));
+				}
+				else {
+					player.sendMessage("Unknown chest");
 				}
 				break;
 			default:

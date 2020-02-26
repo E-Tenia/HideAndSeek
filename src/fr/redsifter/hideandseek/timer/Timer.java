@@ -6,7 +6,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -30,6 +32,9 @@ public class Timer extends BukkitRunnable {
 	public void run() {
 		if(a) {
 			for (Player p : lst) {
+				p.getInventory().clear();
+				ItemStack compass = new ItemStack(Material.COMPASS, 1);
+				p.getInventory().addItem(compass);
 				setScoreBoard(p);
 			}
 			a = false;
@@ -44,10 +49,11 @@ public class Timer extends BukkitRunnable {
 		}
 		if(time == 0 || HideAndSeek.cancel == true) {
 			for (Player p : lst) {
+				p.getInventory().clear();
 				p.addPotionEffect((new PotionEffect(PotionEffectType.HEAL, 1, 10)));
 				p.setFoodLevel(20);
 			}
-			 if(HideAndSeek.hiders.isEmpty()){
+			 if(!HideAndSeek.hiders.isEmpty()){
 				 for(Player p : HideAndSeek.players) {
 						p.setGameMode(GameMode.SURVIVAL);
 						p.sendMessage("The hiders won !");
@@ -62,6 +68,9 @@ public class Timer extends BukkitRunnable {
 					HideAndSeek.cancel = true;
 					HideAndSeek.gamewarp = null;
 			 }
+			for(Location l : HideAndSeek.chestsave.keySet()) {
+				HideAndSeek.chestsave.replace(l, true);
+			}
 			delScoreBoard();
 			cancel();
 		}

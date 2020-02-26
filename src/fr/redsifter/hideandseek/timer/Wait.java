@@ -33,8 +33,6 @@ public class Wait extends BukkitRunnable {
 			starter = board.registerNewObjective("START", "", "");
 			a = false;
 		}
-		System.out.println(currentplayers);
-		System.out.println(newplayer);
 		if ((!currentplayers.contains(newplayer) && newplayer != null) || (currentplayers == null && newplayer != null)) {
 			setScoreBoard(newplayer);
 			currentplayers.add(newplayer);

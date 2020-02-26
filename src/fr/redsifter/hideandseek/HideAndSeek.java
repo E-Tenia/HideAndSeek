@@ -2,10 +2,16 @@ package fr.redsifter.hideandseek;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
+import java.util.Set;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
+
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -19,8 +25,11 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.enchantments.Enchantment;
 
 import fr.redsifter.hideandseek.commands.Commands;
 import net.md_5.bungee.api.ChatColor;
@@ -36,6 +45,8 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	public static ArrayList<Player> seekers = new ArrayList<Player>();
 	public static ArrayList<Player> hiders = new ArrayList<Player>();
 	public static ArrayList<Player> general = new ArrayList<Player>();
+	public static Location chest;
+	public static HashMap<Location,Boolean> chestsave = new HashMap<Location,Boolean>();
 	public static HashMap<Player,Location> save = new HashMap<Player,Location>();
 	@Override
 	public void onEnable() {
@@ -44,10 +55,15 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		saveDefaultConfig();
 		getCommand("hs").setExecutor(new Commands(this));
 		getServer().getPluginManager().registerEvents(this, this);
+		Set<String> chests = getConfig().getConfigurationSection("chests").getKeys(false);
+		for(String s : chests) {
+			chestsave.put(getConfig().getLocation("chests."+s), true);
+		}
 	}
 	@Override
 	public void onDisable() {
 		saveConfig();
+		chestsave.clear();
 		System.out.println("Disabled HideAndSeek");
 		
 	}
@@ -111,8 +127,12 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 				seekers.remove(player);
 				if(seekers.isEmpty()) {
 					for(Player p : players) {
+						general.add(p);
 						p.sendMessage("Not enough players to keep the game going, cancelling...");
 					}
+					players.clear();
+					hiders.clear();
+					seekers.clear();
 					deleteTeam("hide");
 					deleteTeam("seek");
 					cancel = true;
@@ -122,8 +142,12 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 				hiders.remove(player);
 				if(hiders.isEmpty()) {
 					for(Player p : players) {
+						general.add(p);
 						p.sendMessage("Not enough players to keep the game going, cancelling...");
 					}
+					players.clear();
+					hiders.clear();
+					seekers.clear();
 					deleteTeam("hide");
 					deleteTeam("seek");
 					cancel = true;
@@ -131,6 +155,69 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 			}
 		}
 	}
+	
+	@EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event){
+		Player player = event.getPlayer();
+		Block blck = event.getClickedBlock();
+		Set<Location> keys = chestsave.keySet();
+		if(!(event.getAction().equals(Action.RIGHT_CLICK_BLOCK))) {
+			return;
+		}
+        if (players.contains(player) && gamewarp != null && time <= (initialtime-60)){
+        	System.out.println(keys + " " + blck.getLocation());
+        		if(keys.contains(blck.getLocation())) {
+        			System.out.println("Test sucessful");
+        			if(chestsave.get(blck.getLocation())) {
+        				bonus(player);
+        				chestsave.replace(blck.getLocation(),false);
+        			}
+        			else {
+        				player.sendMessage("This bonus has already been claimed");
+        			}
+        		}
+        	}
+    }
+	
+	public void bonus(Player p){
+		Random random = new Random();
+		int r = random.nextInt(100);
+		if(p.getInventory().contains(Material.BOW) && !p.getInventory().contains(Material.SPECTRAL_ARROW)) {
+			p.getInventory().remove(Material.BOW);
+		}
+		p.sendMessage(ChatColor.DARK_AQUA + "" + ChatColor.MAGIC + "[-----]" + ChatColor.GOLD + "B" + ChatColor.RED + "O" + ChatColor.YELLOW + "N" + ChatColor.GOLD + "U" + ChatColor.RED + "S"+ ChatColor.DARK_AQUA + "" + ChatColor.MAGIC + "[-----]");
+		if(r > 91 ) {
+			p.sendMessage(ChatColor.GOLD + "I BELIEVE I CAN FLY");
+			ItemStack item = new ItemStack(Material.GOLDEN_BOOTS, 1);
+			item.addEnchantment(Enchantment.PROTECTION_FALL, 200);
+			p.getInventory().setBoots(item);
+			p.setFlying(true);
+			BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
+            scheduler.scheduleSyncDelayedTask(this, new Runnable() {
+                @Override
+                public void run() {
+                	p.setFlying(false);
+                }
+            }, 100);
+		}
+		else if(r <= 91 && r > 60) {
+			p.sendMessage(ChatColor.DARK_PURPLE + "ENDERPEARL");
+			ItemStack item = new ItemStack(Material.ENDER_PEARL, 1);
+			p.getInventory().addItem(item);
+		}
+		else if(r <= 60 && r > 20) {
+			p.sendMessage(ChatColor.DARK_RED + "SNIPING ASSETS");
+			ItemStack item = new ItemStack(Material.BOW, 1);
+			ItemStack item2 = new ItemStack(Material.SPECTRAL_ARROW, 8);
+			p.getInventory().addItem(item);
+			p.getInventory().addItem(item2);
+		}
+		else if(r <= 20) {
+			p.sendMessage(ChatColor.AQUA + "SUPERSPEED");
+			p.addPotionEffect((new PotionEffect(PotionEffectType.SPEED, 20*10, 7)));
+		}
+	}
+
 	@EventHandler
 	public void onDamage(EntityDamageByEntityEvent event) {//evenement : une entité en tape une autre
 		Entity damager = event.getDamager();//entité ayant frappé
@@ -168,12 +255,21 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	@EventHandler
 	public void onClickTarget(PlayerInteractEvent event) {
 		 Player p=event.getPlayer();
-	     Entity en=getNearestEntityInSight(p,100);
-	     if(players.contains(p) && time < initialtime-60) {
+	     Entity en=getNearestEntityInSight(p,20);
+	     Player pe=null;
+	     if(en instanceof Player) {
+	    	 pe=Bukkit.getPlayerExact(en.getName());
+	     }
+	     else {
+	    	 return;
+	     }
+	     if(pe == null) {
+	    	 return;
+	     }
+	     if(players.contains(p) && time < initialtime-60 && players.contains(pe)) {
 	     String name1 = p.getName();
-	     if(en != null) {
-	    	 String name2 = en.getName();
-		    if(event.getAction()==Action.LEFT_CLICK_AIR && en instanceof Player && hiders.contains(en) && seekers.contains(p)) {
+	     String name2 = en.getName();
+		    if(event.getAction()==Action.LEFT_CLICK_AIR && seekers.contains(p) && hiders.contains(pe)) {
 		    	Bukkit.getPlayerExact(name2).sendMessage(ChatColor.YELLOW + "You got found by " + name1);
 				Bukkit.getPlayerExact(name1).sendMessage(ChatColor.GREEN + "You found " + name2);
 				for(Player p2 : players) {
@@ -181,7 +277,6 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 				}
 				hiders.remove(Bukkit.getPlayerExact(en.getName()));
 		    }
-	     }
 		    if(hiders.isEmpty()) {//si tous les hiders on été trouvés on le notifie aux joueurs, on vide les listes restantes et on arrete le chronomètre
 				for (Player p2 : players) {
 					p2.setGameMode(GameMode.SURVIVAL);

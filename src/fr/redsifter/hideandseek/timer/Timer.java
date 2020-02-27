@@ -1,12 +1,15 @@
 package fr.redsifter.hideandseek.timer;
 
 import java.util.ArrayList;
+//import java.util.Collection;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+//import org.bukkit.entity.ArmorStand;
+//import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
@@ -69,6 +72,16 @@ public class Timer extends BukkitRunnable {
 					HideAndSeek.gamewarp = null;
 			 }
 			for(Location l : HideAndSeek.chestsave.keySet()) {
+				/*final Collection<Entity> entities = l.getWorld().getEntities();
+				for(Entity ent : entities) {
+					Location loc = ent.getLocation();
+					loc.setYaw(0);
+					loc.setPitch(0);
+					loc.setY(l.getY());
+					if(loc == l && ent instanceof ArmorStand) {
+						ent.remove();
+					}
+				}*/
 				HideAndSeek.chestsave.replace(l, true);
 			}
 			delScoreBoard();

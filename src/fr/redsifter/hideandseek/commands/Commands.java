@@ -11,6 +11,8 @@ import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+//import org.bukkit.entity.ArmorStand;
+//import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -191,6 +193,14 @@ public class Commands implements CommandExecutor {
 					wait.startable = true;
 					return true;
 				}
+				/*for(Location l : HideAndSeek.chestsave.keySet()) {
+					ArmorStand z=(ArmorStand)l.getWorld().spawnEntity(l,EntityType.ARMOR_STAND);
+					z.setCustomName(ChatColor.GOLD + "LUCKY CHEST");
+					z.setCustomNameVisible(true);
+					z.setInvulnerable(true);
+					z.setSmall(true);
+					//z.setVisible(false);
+				}*/
 				HideAndSeek.gamewarp = location;
 				System.out.println(HideAndSeek.gamewarp);
 				System.out.println(HideAndSeek.players);

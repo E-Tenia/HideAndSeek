@@ -2,6 +2,7 @@ name: HideAndSeek
 version: 1.0
 author: redsifter
 main: fr.redsifter.hideandseek.HideAndSeek
+api-version: 1.13
 commands:
   hs:
     description: startgame, setgamelist, setgamewarp

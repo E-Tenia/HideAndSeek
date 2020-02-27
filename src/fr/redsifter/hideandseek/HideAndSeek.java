@@ -165,9 +165,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 			return;
 		}
         if (players.contains(player) && gamewarp != null && time <= (initialtime-60)){
-        	System.out.println(keys + " " + blck.getLocation());
         		if(keys.contains(blck.getLocation())) {
-        			System.out.println("Test sucessful");
         			if(chestsave.get(blck.getLocation())) {
         				bonus(player);
         				chestsave.replace(blck.getLocation(),false);
@@ -182,20 +180,27 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	public void bonus(Player p){
 		Random random = new Random();
 		int r = random.nextInt(100);
-		if(p.getInventory().contains(Material.BOW) && !p.getInventory().contains(Material.SPECTRAL_ARROW)) {
-			p.getInventory().remove(Material.BOW);
+		if(p.getInventory().contains(Material.CROSSBOW) && !p.getInventory().contains(Material.SPECTRAL_ARROW)) {
+			p.getInventory().remove(Material.CROSSBOW);
 		}
+		
+		if(p.getInventory().contains(Material.GOLDEN_BOOTS) && p.getAllowFlight() == false) {
+			p.getInventory().remove(Material.GOLDEN_BOOTS);
+		}
+		
 		p.sendMessage(ChatColor.DARK_AQUA + "" + ChatColor.MAGIC + "[-----]" + ChatColor.GOLD + "B" + ChatColor.RED + "O" + ChatColor.YELLOW + "N" + ChatColor.GOLD + "U" + ChatColor.RED + "S"+ ChatColor.DARK_AQUA + "" + ChatColor.MAGIC + "[-----]");
 		if(r > 91 ) {
 			p.sendMessage(ChatColor.GOLD + "I BELIEVE I CAN FLY");
 			ItemStack item = new ItemStack(Material.GOLDEN_BOOTS, 1);
-			item.addEnchantment(Enchantment.PROTECTION_FALL, 200);
+			item.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 200);
 			p.getInventory().setBoots(item);
+			p.setAllowFlight(true);
 			p.setFlying(true);
 			BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
             scheduler.scheduleSyncDelayedTask(this, new Runnable() {
                 @Override
                 public void run() {
+                	p.setAllowFlight(false);
                 	p.setFlying(false);
                 }
             }, 100);
@@ -207,7 +212,8 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		}
 		else if(r <= 60 && r > 20) {
 			p.sendMessage(ChatColor.DARK_RED + "SNIPING ASSETS");
-			ItemStack item = new ItemStack(Material.BOW, 1);
+			ItemStack item = new ItemStack(Material.CROSSBOW, 1);
+			item.addUnsafeEnchantment(Enchantment.QUICK_CHARGE, 5);
 			ItemStack item2 = new ItemStack(Material.SPECTRAL_ARROW, 8);
 			p.getInventory().addItem(item);
 			p.getInventory().addItem(item2);
@@ -293,12 +299,13 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		    }
 	     }
 	}
-	public static Entity getNearestEntityInSight(Player player, int range) {
+	public static Player getNearestEntityInSight(Player player, int range) {
 	    ArrayList<Entity> entities = (ArrayList<Entity>) player.getNearbyEntities(range, range, range);
 	    ArrayList<Block> sightBlock = (ArrayList<Block>) player.getLineOfSight(null, range);
 	    ArrayList<Location> sight = new ArrayList<Location>();
-	    for (int i = 0;i<sightBlock.size();i++)
+	    for (int i = 0;i<sightBlock.size();i++) {
 	        sight.add(sightBlock.get(i).getLocation());
+	    }
 	    for (int i = 0;i<sight.size();i++) {
 	        for (int k = 0;k<entities.size();k++) {
 	        	
@@ -306,7 +313,9 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	                if (Math.abs(entities.get(k).getLocation().getY()-sight.get(i).getY())<1.5) {
 	                    if (Math.abs(entities.get(k).getLocation().getZ()-sight.get(i).getZ())<1.3) {
 	                    	if(sightBlock.get(i).isPassable()) {
-	                    		return entities.get(k);
+	                    		if(entities.get(k) instanceof Player) {
+	                    		return Bukkit.getPlayerExact(entities.get(k).getName());
+	                    		}
 	                    	}
 	                    }
 	                }

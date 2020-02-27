@@ -82,6 +82,7 @@ public class Timer extends BukkitRunnable {
 						ent.remove();
 					}
 				}*/
+				
 				HideAndSeek.chestsave.replace(l, true);
 			}
 			delScoreBoard();

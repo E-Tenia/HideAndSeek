@@ -6,8 +6,10 @@ import java.util.Random;
 import java.util.Set;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
@@ -15,6 +17,7 @@ import org.bukkit.scoreboard.Team;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Entity;
@@ -23,9 +26,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -169,6 +174,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
         			if(chestsave.get(blck.getLocation())) {
         				bonus(player);
         				chestsave.replace(blck.getLocation(),false);
+        				event.setCancelled(true);
         			}
         			else {
         				player.sendMessage("This bonus has already been claimed");
@@ -183,17 +189,14 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		if(p.getInventory().contains(Material.CROSSBOW) && !p.getInventory().contains(Material.SPECTRAL_ARROW)) {
 			p.getInventory().remove(Material.CROSSBOW);
 		}
-		
-		if(p.getInventory().contains(Material.GOLDEN_BOOTS) && p.getAllowFlight() == false) {
-			p.getInventory().remove(Material.GOLDEN_BOOTS);
+		if(p.getInventory().contains(Material.GLASS_BOTTLE)) {
+			p.getInventory().remove(Material.GLASS_BOTTLE);
 		}
 		
 		p.sendMessage(ChatColor.DARK_AQUA + "" + ChatColor.MAGIC + "[-----]" + ChatColor.GOLD + "B" + ChatColor.RED + "O" + ChatColor.YELLOW + "N" + ChatColor.GOLD + "U" + ChatColor.RED + "S"+ ChatColor.DARK_AQUA + "" + ChatColor.MAGIC + "[-----]");
 		if(r > 91 ) {
 			p.sendMessage(ChatColor.GOLD + "I BELIEVE I CAN FLY");
-			ItemStack item = new ItemStack(Material.GOLDEN_BOOTS, 1);
-			item.addUnsafeEnchantment(Enchantment.PROTECTION_FALL, 200);
-			p.getInventory().setBoots(item);
+			p.addPotionEffect((new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20*10, 50)));
 			p.setAllowFlight(true);
 			p.setFlying(true);
 			BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
@@ -212,17 +215,28 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		}
 		else if(r <= 60 && r > 20) {
 			p.sendMessage(ChatColor.DARK_RED + "SNIPING ASSETS");
-			ItemStack item = new ItemStack(Material.CROSSBOW, 1);
-			item.addUnsafeEnchantment(Enchantment.QUICK_CHARGE, 5);
 			ItemStack item2 = new ItemStack(Material.SPECTRAL_ARROW, 8);
-			p.getInventory().addItem(item);
+			if(!p.getInventory().contains(Material.CROSSBOW)) {
+				ItemStack item = new ItemStack(Material.CROSSBOW, 1);
+				item.addUnsafeEnchantment(Enchantment.QUICK_CHARGE, 5);
+				p.getInventory().addItem(item);
+			}
 			p.getInventory().addItem(item2);
 		}
 		else if(r <= 20) {
 			p.sendMessage(ChatColor.AQUA + "SUPERSPEED");
-			p.addPotionEffect((new PotionEffect(PotionEffectType.SPEED, 20*10, 7)));
+			p.getInventory().addItem(getPotionItemStack(PotionType.INSTANT_HEAL,1,false,false,"SUPERSPEED"));
 		}
 	}
+	
+	public ItemStack getPotionItemStack(PotionType type, int level, boolean extend, boolean upgraded, String displayName){
+        ItemStack potion = new ItemStack(Material.POTION, 1);
+        PotionMeta meta = (PotionMeta) potion.getItemMeta();      
+        meta.addCustomEffect(new PotionEffect(PotionEffectType.SPEED, 20*60, 2), true);
+        meta.setDisplayName(displayName);
+        potion.setItemMeta(meta);
+        return potion;
+    }
 
 	@EventHandler
 	public void onDamage(EntityDamageByEntityEvent event) {//evenement : une entité en tape une autre
@@ -248,12 +262,6 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 				general.add(p);
 			}
 			cancel = true;
-			seekers.clear();
-			players.clear();
-			save.clear();
-			deleteTeam("seek");
-			deleteTeam("hide");
-			HideAndSeek.gamewarp = null;
 			}
 		}
 	}
@@ -282,7 +290,6 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 					p2.sendMessage(ChatColor.RED + "" + Bukkit.getPlayerExact(name2).getName() + " has been found by " + Bukkit.getPlayerExact(name1).getName());
 				}
 				hiders.remove(Bukkit.getPlayerExact(en.getName()));
-		    }
 		    if(hiders.isEmpty()) {//si tous les hiders on été trouvés on le notifie aux joueurs, on vide les listes restantes et on arrete le chronomètre
 				for (Player p2 : players) {
 					p2.setGameMode(GameMode.SURVIVAL);
@@ -290,13 +297,8 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 					general.add(p2);
 				}
 				cancel = true;
-				seekers.clear();
-				players.clear();
-				save.clear();
-				deleteTeam("seek");
-				deleteTeam("hide");
-				HideAndSeek.gamewarp = null;
 		    }
+	     }
 	     }
 	}
 	public static Player getNearestEntityInSight(Player player, int range) {
@@ -334,18 +336,18 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 			event.setCancelled(true);//si oui chat général désactivé
 			if(hiders.contains(player)) {//si le joueur est hider on envoie son message dans le groupe hider
 				for (Player p: hiders) {
-					p.sendMessage(ChatColor.DARK_PURPLE + "<hs>"+ ChatColor.DARK_GREEN + "[HIDERS]"  + ChatColor.DARK_PURPLE+ "[" + player.getName() +  "]" + ChatColor.WHITE + msg);
+					p.sendMessage(ChatColor.DARK_PURPLE + "[H&S]"+ ChatColor.DARK_GREEN + "[HIDERS]"  + ChatColor.DARK_PURPLE+ "[" + player.getName() +  "]" + ChatColor.WHITE + msg);
 				}
 			}
 			else if(seekers.contains(player)) {//si le joueur est seeker on envoie son message dans le groupe seeker
 				event.setCancelled(true);
 				for (Player p: seekers) {
-					p.sendMessage(ChatColor.DARK_PURPLE+ "<hs>" + ChatColor.DARK_RED + "[SEEKERS]" + ChatColor.DARK_PURPLE+ "[" + player.getName() +  "]" + ChatColor.WHITE + msg);
+					p.sendMessage(ChatColor.DARK_PURPLE+ "[H&S]" + ChatColor.DARK_RED + "[SEEKERS]" + ChatColor.DARK_PURPLE+ "[" + player.getName() +  "]" + ChatColor.WHITE + msg);
 				}
 			}
 			else {
 				for (Player p: players) {
-					p.sendMessage(ChatColor.DARK_PURPLE+ "<hs>" +  "[" + player.getName() +  "]" + ChatColor.WHITE + msg);
+					p.sendMessage(ChatColor.DARK_PURPLE+ "[H&S]" +  "[" + player.getName() +  "]" + ChatColor.WHITE + msg);
 				}
 			}
 		}
@@ -376,6 +378,100 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 				player.teleport(gamewarp);
 			}
 		}
+		}
+	}
+	
+	@EventHandler
+	public void onPlayerDeath(PlayerDeathEvent event) {
+		Entity ent = event.getEntity();
+		Player killer = getKiller(event.getDeathMessage());
+		Player player = null;
+		if(ent instanceof Player) {
+			player = Bukkit.getPlayerExact(ent.getName());
+		}
+		
+		if(players.contains(player)) {
+			if((killer != null && (seekers.contains(killer) || hiders.contains(killer)) ) && (hiders.contains(player) || seekers.contains(player))) {
+				event.setDeathMessage("");
+				player.sendMessage(ChatColor.DARK_PURPLE + "YOU HAVE BEEN ELIMINATED BY " + ChatColor.RED + killer.getName());
+				for(Player p : players) {
+					p.sendMessage(ChatColor.YELLOW + player.getName() + ChatColor.DARK_PURPLE + " HAS BEEN ELIMINATED BY "  + ChatColor.RED + killer.getName());			
+				}
+			}
+			else {
+				return;
+			}
+			if(seekers.contains(player)) {
+				boolean a = teamRemove(player.getName(),"seek");
+				if(a) {
+					System.out.println("Removing player from playerlist");
+					seekers.remove(player);
+					players.remove(player);
+					general.add(player);
+					if(seekers.isEmpty()) {
+						for(Player p : players) {
+							p.sendMessage(ChatColor.GOLD + "ALL SEEKERS HAVE BEEN ELIMINATED, THE HIDERS WON !");
+						}
+						cancel = true;
+					}
+				}
+			}
+			else if(hiders.contains(player)) {
+				boolean a = teamRemove(player.getName(),"hide");
+				if(a) {
+					System.out.println("Removing player from playerlist");
+					hiders.remove(player);
+					players.remove(player);
+					general.add(player);
+					if(hiders.isEmpty()) {
+						for(Player p : players) {
+							p.sendMessage(ChatColor.GOLD + "ALL HIDERS HAVE BEEN ELIMINATED, THE SEEKERS WON !");
+						}
+						cancel = true;
+					}
+				}
+			}
+		}
+	}
+	
+	public Player getKiller(String msg) {
+		String buffer = "";
+		for(int i = 0;i < msg.length();i++) {
+			buffer += msg.charAt(i);
+			if(msg.charAt(i) == ' ') {
+				buffer = "";
+			}
+		}
+		return Bukkit.getPlayerExact(buffer);
+	}
+	
+	private boolean teamRemove(String p,String nm) {
+		Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
+		Team team = null;
+		for (Team t : scoreboard.getTeams()) {
+			if (t.getName().equals(nm)) {
+				team = t;
+				break;
+			}
+		}
+		if (team != null) {
+			team.removeEntry(p);
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+	
+	public void onPlayerRespawn(PlayerRespawnEvent event) {
+		Player player = event.getPlayer();
+		System.out.println(player.getName() + " respawned");
+		if(players.contains(player) && gamewarp != null) {
+			player.teleport(gamewarp);
+			if(hiders.contains(player)) {
+				player.setNoDamageTicks(20*60);
+				player.addPotionEffect((new PotionEffect(PotionEffectType.INVISIBILITY, 20*60, 1)));
+			}
 		}
 	}
 	

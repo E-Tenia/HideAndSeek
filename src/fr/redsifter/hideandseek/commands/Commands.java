@@ -11,8 +11,8 @@ import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-//import org.bukkit.entity.ArmorStand;
-//import org.bukkit.entity.EntityType;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -194,7 +194,11 @@ public class Commands implements CommandExecutor {
 					return true;
 				}
 				/*for(Location l : HideAndSeek.chestsave.keySet()) {
-					ArmorStand z=(ArmorStand)l.getWorld().spawnEntity(l,EntityType.ARMOR_STAND);
+					Location loc = l;
+				  	loc.setY(l.getBlockY() + 1);
+      				loc.setX(l.getBlockX() + 0.5D);
+      				loc.setZ(l.getBlockZ() + 0.5D);
+					ArmorStand z=(ArmorStand)l.getWorld().spawnEntity(loc,EntityType.ARMOR_STAND);
 					z.setCustomName(ChatColor.GOLD + "LUCKY CHEST");
 					z.setCustomNameVisible(true);
 					z.setInvulnerable(true);
@@ -248,6 +252,7 @@ public class Commands implements CommandExecutor {
 					sender.sendMessage("Precise more players to invite");
 					break;
 				}
+				wait.startable = true;
 				String[] hiders = new String[init2];
 				String[] seekers = new String[init1];
 				for(j = 0;j < purged.length;j++) {
@@ -491,8 +496,8 @@ public class Commands implements CommandExecutor {
 			case "listchests":
 				Set<String> chests = main.getConfig().getConfigurationSection("chests").getKeys(false);
 				sender.sendMessage("Available chests : ");
-				for (String s : chests) {
-					sender.sendMessage(s + " : " + main.getConfig().getLocation("chests."+s));
+				for (String s : chests) {			
+					sender.sendMessage(s + " : " + main.getConfig().getLocation("chests."+s).getWorld().getName() + " : X, " + main.getConfig().getLocation("chests."+s).getX() + " Y, " + main.getConfig().getLocation("chests."+s).getY() + " Z," + main.getConfig().getLocation("chests."+s).getZ());
 				}
 				break;
 			case "tpchest":

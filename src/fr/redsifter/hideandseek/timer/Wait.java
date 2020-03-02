@@ -73,9 +73,9 @@ public class Wait extends BukkitRunnable {
 				startable = true;
 				Bukkit.broadcastMessage("Waiting for the start of the game");
 			}
-			ArrayList<Player> lst = randomize(HideAndSeek.players);
+			ArrayList<Player> lst = random(HideAndSeek.players);
 			for(Player p : lst) {
-				if (HideAndSeek.seekers.size() < HideAndSeek.seekers.size() || HideAndSeek.seekers.isEmpty()) {
+				if (HideAndSeek.seekers.size() < HideAndSeek.hiders.size() || HideAndSeek.seekers.isEmpty()) {
 					Bukkit.broadcastMessage("Inviting " + p.getName() + " as Seeker !");
 					a = teamAdd(p.getName(),"seek");
 					if(a) {
@@ -107,32 +107,25 @@ public class Wait extends BukkitRunnable {
 		}
 	}
 	
-	public ArrayList<Player> randomize(ArrayList<Player> list){
-		double r = 0;
-		ArrayList<Player> list1 = new ArrayList<Player>();
-		ArrayList<Player> list2= new ArrayList<Player>();
-		ArrayList<Player> list3= new ArrayList<Player>();
-		for(Player p : list) {
-			r = Math.random();
-			if(r > 0.5) {
-				System.out.println("adding " + p + "to list1");
-				list1.add(p);
-			}
-			else {
-				System.out.println("adding " + p + "to list2");
-				list2.add(p);
-			}
-		}
-			
-		for(Player p : list1) {
-			System.out.println("adding " + p + "to list3");
-			list3.add(p);
-		}
-		for(Player p : list2) {
-			System.out.println("adding " + p + "to list3");
-			list3.add(p);
-		}
-		return list3;
+	public ArrayList<Player> random(ArrayList<Player> list){
+		int min = 0, max = list.size();
+        int r = min + (int)(Math.random() * ((max - min) + 1));
+        for(int i = 0; i < r; i++) {
+            min = 0; 
+            max = list.size() - 1;
+            int nombreAleat = min + (int)(Math.random() * ((max - min) + 1));
+
+
+            System.out.println(nombreAleat);
+            System.out.println("Liste A : "+list);
+
+            list.add(list.get(nombreAleat));
+            list.remove(nombreAleat);
+
+            System.out.println("Liste B : "+list);
+            System.out.println("---------");
+        }
+       return list;
 	}
 	
 	private boolean teamAdd(String p,String nm) {

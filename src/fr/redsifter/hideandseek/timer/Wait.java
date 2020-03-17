@@ -36,7 +36,6 @@ public class Wait extends BukkitRunnable {
 		if ((!currentplayers.contains(newplayer) && newplayer != null) || (currentplayers == null && newplayer != null)) {
 			setScoreBoard(newplayer);
 			currentplayers.add(newplayer);
-			newplayer = null;
 		}
 		if(time < 10) {
 			Bukkit.broadcastMessage(ChatColor.GOLD + "Registering unavailable in "+time);

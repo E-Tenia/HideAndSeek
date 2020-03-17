@@ -193,21 +193,17 @@ public class Commands implements CommandExecutor {
 					wait.startable = true;
 					return true;
 				}
-				/*for(Location l : HideAndSeek.chestsave.keySet()) {
-					Location loc = l;
-				  	loc.setY(l.getBlockY() + 1);
-      				loc.setX(l.getBlockX() + 0.5D);
-      				loc.setZ(l.getBlockZ() + 0.5D);
-					ArmorStand z=(ArmorStand)l.getWorld().spawnEntity(loc,EntityType.ARMOR_STAND);
+				for(Location l : HideAndSeek.chestsave.keySet()) {
+					Location loc = new Location(l.getWorld(),(l.getX() + 0.5D),l.getY(),(l.getZ() + 0.5D));
+					ArmorStand z=(ArmorStand)loc.getWorld().spawnEntity(loc,EntityType.ARMOR_STAND);
 					z.setCustomName(ChatColor.GOLD + "LUCKY CHEST");
 					z.setCustomNameVisible(true);
 					z.setInvulnerable(true);
 					z.setSmall(true);
-					//z.setVisible(false);
-				}*/
+					z.setVisible(false);
+					HideAndSeek.chestnames.add(z);
+				}
 				HideAndSeek.gamewarp = location;
-				System.out.println(HideAndSeek.gamewarp);
-				System.out.println(HideAndSeek.players);
 				for(Player p : players) {
 					p.teleport(location);
 				}
@@ -227,6 +223,12 @@ public class Commands implements CommandExecutor {
 				startplayer = null;
 				break;
 			case "setgamelist":
+				if(sender instanceof Player) {
+					startplayer = Bukkit.getPlayerExact(sender.getName());
+				}
+				else {
+					sender.sendMessage("You must be a player to perform this commands");
+				}
 				if (args.length > 1) {
 				int i = 0;
 				int j = 0;
@@ -281,6 +283,9 @@ public class Commands implements CommandExecutor {
 				if(sender instanceof Player) {
 					startplayer = Bukkit.getPlayerExact(sender.getName());
 				}
+				else {
+					sender.sendMessage("You must be a player to perform this commands");
+				}
 				if(HideAndSeek.set == true) {
 					sender.sendMessage("A game is already set");
 					return true;
@@ -311,21 +316,20 @@ public class Commands implements CommandExecutor {
 				}
 				break;
 			case "cancelgame":
+				HideAndSeek.hiders.clear();
 				if(HideAndSeek.set == true) {
 					wait.cancel = true;
 					HideAndSeek.set = false;
+					for(Player p : HideAndSeek.players) {
+						HideAndSeek.general.add(p);
+					}
+					HideAndSeek.players.clear();
+					HideAndSeek.hiders.clear();
+					HideAndSeek.seekers.clear();
 				}
 				else {
 					HideAndSeek.cancel = true;
 				}
-				HideAndSeek.deleteTeam("seek");
-				HideAndSeek.deleteTeam("hide");
-				for(Player p : HideAndSeek.players) {
-					HideAndSeek.general.add(p);
-				}
-				HideAndSeek.players.clear();
-				HideAndSeek.seekers.clear();
-				HideAndSeek.hiders.clear();
 				Bukkit.broadcastMessage(ChatColor.GOLD + "H&S GAME WAS CANCELLED");
 				break;
 			case "setgamewarp":
@@ -474,7 +478,6 @@ public class Commands implements CommandExecutor {
 				main.saveConfig();
 				HideAndSeek.chestsave.put(main.getConfig().getLocation("chests."+id), true);
 				sender.sendMessage("You successfuly set the chest " + id);
-				HideAndSeek.chest = null;
 				break;
 			case "remchest":
 				int id2 = Integer.parseInt(args[1].trim());

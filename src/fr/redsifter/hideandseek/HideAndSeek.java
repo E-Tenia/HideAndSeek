@@ -6,7 +6,6 @@ import java.util.Random;
 import java.util.Set;
 
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
@@ -17,6 +16,7 @@ import org.bukkit.scoreboard.Team;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -29,10 +29,12 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 
@@ -50,9 +52,15 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	public static ArrayList<Player> seekers = new ArrayList<Player>();
 	public static ArrayList<Player> hiders = new ArrayList<Player>();
 	public static ArrayList<Player> general = new ArrayList<Player>();
-	public static Location chest;
+	public static ArrayList<Entity> chestnames = new ArrayList<Entity>();
+	public static HashMap<Player,Boolean> notify = new HashMap<Player,Boolean>();
+	public static HashMap<Location,Player> traps = new HashMap<Location,Player>();
+	public static HashMap<Player,Integer> trappers = new HashMap<Player,Integer>();
 	public static HashMap<Location,Boolean> chestsave = new HashMap<Location,Boolean>();
 	public static HashMap<Player,Location> save = new HashMap<Player,Location>();
+	public static HashMap<Player,Boolean> havemoved = new HashMap<Player,Boolean>();
+	public static HashMap<Player,Location> hidermoves = new HashMap<Player,Location>();
+	
 	@Override
 	public void onEnable() {
 		System.out.println("Enabled HideAndSeek");
@@ -135,11 +143,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 						general.add(p);
 						p.sendMessage("Not enough players to keep the game going, cancelling...");
 					}
-					players.clear();
 					hiders.clear();
-					seekers.clear();
-					deleteTeam("hide");
-					deleteTeam("seek");
 					cancel = true;
 				}
 			}
@@ -150,11 +154,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 						general.add(p);
 						p.sendMessage("Not enough players to keep the game going, cancelling...");
 					}
-					players.clear();
 					hiders.clear();
-					seekers.clear();
-					deleteTeam("hide");
-					deleteTeam("seek");
 					cancel = true;
 				}
 			}
@@ -169,32 +169,79 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		if(!(event.getAction().equals(Action.RIGHT_CLICK_BLOCK))) {
 			return;
 		}
-        if (players.contains(player) && gamewarp != null && time <= (initialtime-60)){
-        		if(keys.contains(blck.getLocation())) {
-        			if(chestsave.get(blck.getLocation())) {
-        				bonus(player);
-        				chestsave.replace(blck.getLocation(),false);
-        				event.setCancelled(true);
-        			}
-        			else {
-        				player.sendMessage("This bonus has already been claimed");
-        			}
+        if ((seekers.contains(player) || hiders.contains(player)) && gamewarp != null && time <= (initialtime-60)){
+        	if(keys.contains(blck.getLocation())) {
+        		if(chestsave.get(blck.getLocation())) {
+        			bonus(player);
+        			chestsave.replace(blck.getLocation(),false);
+        				for(Entity ent : chestnames) {
+        					Location loc = new Location(ent.getWorld(),(ent.getLocation().getX() - 0.5D),ent.getLocation().getY(),(ent.getLocation().getZ() - 0.5D));
+        					if(loc.equals(blck.getLocation())) {
+        						ent.setCustomName(ChatColor.DARK_RED + "[CLAIMED]");
+        						ent.setCustomNameVisible(true);
+        					}
+        				}
+        			event.setCancelled(true);
+        		}
+        		else {
+        			player.sendMessage("This bonus has already been claimed");
+        			event.setCancelled(true);
         		}
         	}
+        	if (trappers.containsKey(player) && trappers.get(player)  > 0 && player.getInventory().getItemInMainHand().equals(new ItemStack(Material.BLAZE_ROD))) {
+    			if(blck.getType().equals(Material.CHEST)) {
+    				player.sendMessage("You can't set a trap on a chest");
+    				return;
+    			}
+        		if(!traps.containsKey(blck.getLocation())) {
+    				player.sendMessage(ChatColor.GRAY + "You successfuly set your bear trap");
+    				Location loc = new Location(blck.getLocation().getWorld(),blck.getLocation().getX(),blck.getLocation().getY() + 1,blck.getLocation().getZ());
+        			trappers.replace(player,trappers.get(player)-1);
+        			traps.put(loc,player);
+    			}
+    			else {
+    				player.sendMessage("A trap is already set at this location");
+    			}
+    		}
+        }
+        else if(players.contains(player) && gamewarp != null && time > (initialtime-60) && blck.getType().equals(Material.CHEST)){
+        player.sendMessage("Bonus chests are not available yet");
+        event.setCancelled(true);
+        }
     }
 	
 	public void bonus(Player p){
 		Random random = new Random();
-		int r = random.nextInt(100);
+		int r = random.nextInt(120);
 		if(p.getInventory().contains(Material.CROSSBOW) && !p.getInventory().contains(Material.SPECTRAL_ARROW)) {
 			p.getInventory().remove(Material.CROSSBOW);
 		}
 		if(p.getInventory().contains(Material.GLASS_BOTTLE)) {
 			p.getInventory().remove(Material.GLASS_BOTTLE);
 		}
+		if(p.getInventory().contains(Material.BLAZE_ROD) && trappers.get(p) == 0) {
+			p.getInventory().remove(Material.BLAZE_ROD);
+		}
 		
 		p.sendMessage(ChatColor.DARK_AQUA + "" + ChatColor.MAGIC + "[-----]" + ChatColor.GOLD + "B" + ChatColor.RED + "O" + ChatColor.YELLOW + "N" + ChatColor.GOLD + "U" + ChatColor.RED + "S"+ ChatColor.DARK_AQUA + "" + ChatColor.MAGIC + "[-----]");
-		if(r > 91 ) {
+		if(r > 100) {
+			p.sendMessage(ChatColor.DARK_GRAY + "BEAR TRAP");
+			p.sendMessage(ChatColor.GRAY + "Set your trap with the stick by right-clicking on a block with it");
+			if(!trappers.containsKey(p)) {
+				ItemStack item = new ItemStack(Material.BLAZE_ROD, 1);
+				p.getInventory().addItem(item);
+				trappers.put(p,1);
+			}
+			else if(trappers.get(p) == 0) {
+				ItemStack item = new ItemStack(Material.BLAZE_ROD, 1);
+				p.getInventory().addItem(item);
+				trappers.replace(p,1);
+			}
+			else {
+				trappers.replace(p,trappers.get(p)+1);
+			}
+		}
+		else if(r <= 100 && r > 91) {
 			p.sendMessage(ChatColor.GOLD + "I BELIEVE I CAN FLY");
 			p.addPotionEffect((new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 20*10, 50)));
 			p.setAllowFlight(true);
@@ -232,7 +279,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	public ItemStack getPotionItemStack(PotionType type, int level, boolean extend, boolean upgraded, String displayName){
         ItemStack potion = new ItemStack(Material.POTION, 1);
         PotionMeta meta = (PotionMeta) potion.getItemMeta();      
-        meta.addCustomEffect(new PotionEffect(PotionEffectType.SPEED, 20*60, 2), true);
+        meta.addCustomEffect(new PotionEffect(PotionEffectType.SPEED, 20*25, 7), true);
         meta.setDisplayName(displayName);
         potion.setItemMeta(meta);
         return potion;
@@ -244,7 +291,7 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		String name1 = event.getDamager().getName();
 		Entity ent = event.getEntity();//entité ayant été frappée
 		String name2 = event.getEntity().getName();
-		if(time < initialtime-60) {
+		if(time < initialtime-60 && time != -1) {
 		if(damager instanceof Player && ent instanceof Player) {//si les deux entités sont des joeurs on vérifie qu'elles sont dans une partie
 			if(seekers.contains(Bukkit.getPlayerExact(name1)) && hiders.contains(Bukkit.getPlayerExact(name2))){//si c'est le cas on notifie au joueur frappé qu'il a été trouvé et au joueur frappant qu'il l'a trouvé ainsi qu'au reste des joueurs
 				Bukkit.getPlayerExact(name2).sendMessage(ChatColor.YELLOW + "You got found by " + name1);
@@ -280,10 +327,10 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	     if(pe == null) {
 	    	 return;
 	     }
-	     if(players.contains(p) && time < initialtime-60 && players.contains(pe)) {
+	     if(players.contains(p) && time < initialtime-60 && players.contains(pe) && time != -1) {
 	     String name1 = p.getName();
 	     String name2 = en.getName();
-		    if(event.getAction()==Action.LEFT_CLICK_AIR && seekers.contains(p) && hiders.contains(pe)) {
+		    if(event.getAction()==Action.LEFT_CLICK_AIR && seekers.contains(p) && hiders.contains(pe) && pe.getNoDamageTicks() == 0) {
 		    	Bukkit.getPlayerExact(name2).sendMessage(ChatColor.YELLOW + "You got found by " + name1);
 				Bukkit.getPlayerExact(name1).sendMessage(ChatColor.GREEN + "You found " + name2);
 				for(Player p2 : players) {
@@ -364,18 +411,82 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		Player player = event.getPlayer();
 		if(player != null && gamewarp != null) {
 		if(players.contains(player)) {
-			if(player.getLocation().distanceSquared(gamewarp) > 13800 && player.getLocation().distanceSquared(gamewarp) < 14500) {
+			if(player.getLocation().distanceSquared(gamewarp) > 15800 && player.getLocation().distanceSquared(gamewarp) < 18500) {
 				if(save.containsKey(player)) {
 					save.remove(player);
 				}
 				save.put(player,player.getLocation());
 			}
-			if(player.getLocation().distanceSquared(gamewarp) > 15000 && player.getLocation().distanceSquared(gamewarp) < 18000) {
+			if(player.getLocation().distanceSquared(gamewarp) > 20000 && player.getLocation().distanceSquared(gamewarp) < 25000) {
 				player.sendMessage("You are trying to pass through the game area's limits");
 				player.getPlayer().teleport(save.get(player));
 			}
-			else if(player.getLocation().distanceSquared(gamewarp) >= 20300) {
+			else if(player.getLocation().distanceSquared(gamewarp) >= 25300) {
 				player.teleport(gamewarp);
+			}
+			
+			if(seekers.contains(player)) {
+				if(player.getLocation().distanceSquared(player.getCompassTarget()) < 400) {
+					for(Player p : hiders) {
+						Location loc = new Location(p.getWorld(),Math.round(p.getLocation().getX()),Math.round(p.getLocation().getY()),Math.round(p.getLocation().getZ()));
+						if(loc.equals(player.getCompassTarget()) && notify.get(player) == false) {
+							p.sendMessage(ChatColor.RED + "" + player.getName() + " is near you");
+							notify.replace(player,true);
+						}
+					}
+				}
+				else {
+					for(Player p : hiders) {
+						Location loc = new Location(p.getWorld(),Math.round(p.getLocation().getX()),Math.round(p.getLocation().getY()),Math.round(p.getLocation().getZ()));
+						if(loc.equals(player.getCompassTarget()) && notify.get(player) == true) {
+							p.sendMessage(ChatColor.DARK_GREEN + "" + player.getName() + " is getting further from you");
+							notify.replace(player,false);
+						}
+					}
+				}
+			}
+			else if(hiders.contains(player)) {
+				if(player.getLocation().distanceSquared(hidermoves.get(player)) >= 50) {
+					havemoved.replace(player, true);
+				}
+			}
+			if(hiders.contains(player) && player.isGlowing() && hidermoves.get(player).distanceSquared(player.getLocation()) >= 50) {
+				player.sendMessage(ChatColor.DARK_GREEN + "You are no longer exposed");
+				player.setGlowing(false);
+				Location loc = player.getLocation();
+				loc.setPitch(0);
+				loc.setYaw(0);
+				hidermoves.replace(player,loc);
+			}
+			if (!traps.isEmpty()) {
+				Block blck = player.getLocation().getBlock();
+				Location loc = new Location(blck.getLocation().getWorld(),blck.getLocation().getX(),blck.getLocation().getY(),blck.getLocation().getZ());
+					for(Location l : traps.keySet()) {
+						if(player.getLocation().distanceSquared(l) < 50) {
+							blck.getWorld().spawnParticle(Particle.CAMPFIRE_COSY_SMOKE,l, 1);
+						}
+					}
+				if(traps.containsKey(loc)) {
+					System.out.println("Trap location " + blck.getLocation());
+					if(hiders.contains(traps.get(loc)) && !hiders.contains(player)) {
+						player.addPotionEffect((new PotionEffect(PotionEffectType.SLOW, 20*20, 3)));
+						traps.get(loc).sendMessage(ChatColor.DARK_GRAY + "" + player.getName() + " has been surprised by your trap at " + loc.getX() + ", " + loc.getY() + ", " + loc.getZ());
+						traps.remove(loc);
+					}
+					else if(seekers.contains(traps.get(loc)) && !seekers.contains(player)) {
+						player.addPotionEffect((new PotionEffect(PotionEffectType.SLOW, 20*20, 3)));
+						traps.get(loc).sendMessage(ChatColor.DARK_GRAY + "" + player.getName() + " has been surprised by your trap at " + loc.getX() + ", " + loc.getY() + ", " + loc.getZ());
+						traps.remove(loc);
+					}
+				}
+			}
+			if(player.getLocation().getBlock().getType() == Material.LAVA) {
+				player.teleport(gamewarp);
+				if(hiders.contains(player)) {
+					player.addPotionEffect((new PotionEffect(PotionEffectType.INVISIBILITY, 20*15, 1)));
+					player.setNoDamageTicks(20*15);
+				}
+				player.setFireTicks(20);
 			}
 		}
 		}
@@ -384,10 +495,11 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 	@EventHandler
 	public void onPlayerDeath(PlayerDeathEvent event) {
 		Entity ent = event.getEntity();
-		Player killer = getKiller(event.getDeathMessage());
 		Player player = null;
+		Player killer = null;
 		if(ent instanceof Player) {
 			player = Bukkit.getPlayerExact(ent.getName());
+			killer = player.getKiller();
 		}
 		
 		if(players.contains(player)) {
@@ -434,17 +546,6 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 		}
 	}
 	
-	public Player getKiller(String msg) {
-		String buffer = "";
-		for(int i = 0;i < msg.length();i++) {
-			buffer += msg.charAt(i);
-			if(msg.charAt(i) == ' ') {
-				buffer = "";
-			}
-		}
-		return Bukkit.getPlayerExact(buffer);
-	}
-	
 	private boolean teamRemove(String p,String nm) {
 		Scoreboard scoreboard = Bukkit.getScoreboardManager().getMainScoreboard();
 		Team team = null;
@@ -474,5 +575,23 @@ public class HideAndSeek extends JavaPlugin implements Listener{
 			}
 		}
 	}
+	
+	@EventHandler
+	public void onPlayerDropItem(PlayerDropItemEvent event) {
+		if(hiders.contains(event.getPlayer()) || seekers.contains(event.getPlayer())) {
+			event.setCancelled(true);
+		}
+	}
+	
+	@EventHandler
+	public void onPlayerPickupItem(EntityPickupItemEvent event) {
+		Player player = null;
+		if(event.getEntity() instanceof Player) {
+			player = Bukkit.getPlayerExact(event.getEntity().getName());
+		}
+			if(hiders.contains(player) || seekers.contains(player)) {
+					event.setCancelled(true);
+			}
+		}
 	
 }

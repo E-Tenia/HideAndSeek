@@ -1,17 +1,12 @@
 package fr.redsifter.hideandseek.timer;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Random;
-import java.util.Set;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -31,6 +26,7 @@ public class Timer extends BukkitRunnable {
 	final Scoreboard board = manager.getMainScoreboard();
 	final Objective timer = board.registerNewObjective("TIMER", "", "");
 	public int time;
+	public int move = 100;
 	public int assignation = 200;
 	public ArrayList<Player> lst;
 	public boolean a = true;
@@ -43,26 +39,73 @@ public class Timer extends BukkitRunnable {
 				ItemStack compass = new ItemStack(Material.COMPASS, 1);
 				p.getInventory().addItem(compass);
 				setScoreBoard(p);
+				p.addPotionEffect((new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 999999999, 3)));
+				if(HideAndSeek.seekers.contains(p)) {
+					HideAndSeek.notify.put(p,false);
+				}
+				if(HideAndSeek.hiders.contains(p)) {
+					Location loc = p.getLocation();
+					loc.setPitch(0);
+					loc.setYaw(0);
+					HideAndSeek.havemoved.put(p,false);
+					HideAndSeek.hidermoves.put(p,loc);
+				}
 			}
 			a = false;
 		}
 		HideAndSeek.time = time;
 		setCompass();
 		assignation--;
+		move--;
 		if(assignation == 0) {
 			for(Player p : lst) {
 				p.sendMessage(ChatColor.DARK_AQUA + "" + ChatColor.MAGIC + "[-----]" + ChatColor.GOLD + "NEW BONUS CHEST GENERATION" + ChatColor.DARK_AQUA + "" + ChatColor.MAGIC + "[-----]");
 			}
 			for(Location l : HideAndSeek.chestsave.keySet()) {
+				for(Entity ent : HideAndSeek.chestnames) {
+					ent.setCustomName(ChatColor.GOLD + "LUCKY CHEST");
+					ent.setCustomNameVisible(true);
+				}
 				HideAndSeek.chestsave.replace(l, true);
 			}
 			assignation = 200;
 		}
+		
+		if(move == 0) {
+			for(Player p : lst) {
+				if(HideAndSeek.hiders.contains(p)) {
+					Location loc = p.getLocation();
+					loc.setYaw(0);
+					loc.setPitch(0);
+					if(HideAndSeek.hidermoves.get(p).distanceSquared(loc) < 50 && HideAndSeek.havemoved.get(p) == false) {
+						p.sendMessage(ChatColor.RED + "You are exposed, move !");
+						p.setGlowing(true);
+					}
+					else {
+						HideAndSeek.hidermoves.replace(p,loc);
+						HideAndSeek.havemoved.replace(p,false);
+					}
+				}
+			}
+			move = 100;
+		}
+		else if(move == 20) {
+			for(Player p : lst) {
+				if(HideAndSeek.hiders.contains(p)) {
+					Location loc = p.getLocation();
+					loc.setYaw(0);
+					loc.setPitch(0);
+					if(HideAndSeek.hidermoves.get(p).distanceSquared(loc) < 50 && HideAndSeek.havemoved.get(p) == false) {
+						p.sendMessage(ChatColor.DARK_GRAY + "If you don't move further than 7 blocks within 20 seconds you will be exposed !");
+					}
+				}
+			}
+		}
+		
 		for (Player p : lst) {
 			updateScoreBoard(p);
 			if(p.getHealth() <= 5) {
 				p.addPotionEffect((new PotionEffect(PotionEffectType.HEAL, 1, 10)));
-				p.addPotionEffect((new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 60, 10)));
 			}
 			p.setFoodLevel(20);
 			if(time == HideAndSeek.initialtime-60) {
@@ -71,9 +114,11 @@ public class Timer extends BukkitRunnable {
 			 
 		}
 		if(time == 0 || HideAndSeek.cancel == true) {
-			for (Player p : lst) {
+			for (Player p : HideAndSeek.players) {
+				p.setGlowing(false);
 				p.getInventory().clear();
 				p.addPotionEffect((new PotionEffect(PotionEffectType.HEAL, 1, 10)));
+				p.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
 				p.setFoodLevel(20);
 			}
 			 if(!HideAndSeek.hiders.isEmpty()){
@@ -84,19 +129,19 @@ public class Timer extends BukkitRunnable {
 					}
 			 }
 			for(Location l : HideAndSeek.chestsave.keySet()) {
-				/*final Collection<Entity> entities = l.getWorld().getEntities();
-				for(Entity ent : entities) {
-					Location loc = l; 
-					loc.setY(l.getBlockY() + 1);
-      				loc.setX(l.getBlockX() + 0.5D);
-      				loc.setZ(l.getBlockZ() + 0.5D);
-					if(ent.getLocation() == loc && ent instanceof ArmorStand) {
-						ent.remove();
-					}
-				}*/
+				for(Entity ent : HideAndSeek.chestnames) {
+					ent.setInvulnerable(false);
+					ent.remove();
+				}
 				
 				HideAndSeek.chestsave.replace(l, true);
 			}
+			HideAndSeek.notify.clear();
+			HideAndSeek.trappers.clear();
+			HideAndSeek.traps.clear();
+			HideAndSeek.chestnames.clear();
+			HideAndSeek.havemoved.clear();
+			HideAndSeek.hidermoves.clear();
 			HideAndSeek.hiders.clear();
 			HideAndSeek.seekers.clear();
 			HideAndSeek.players.clear();
@@ -129,7 +174,7 @@ public class Timer extends BukkitRunnable {
 	
 	public void setCompass() {
 		Player closest = null;//hiders.get(0);
-		double current = 15000;//seekers.get(0).getLocation().distanceSquared(hiders.get(0).getLocation());
+		double current = 25000;//seekers.get(0).getLocation().distanceSquared(hiders.get(0).getLocation());
 		
 		//assignation cibles boussoles
 		for (Player p : HideAndSeek.seekers) {
@@ -145,15 +190,15 @@ public class Timer extends BukkitRunnable {
 				Location loc = new Location(closest.getLocation().getWorld(),closest.getLocation().getX(),closest.getLocation().getY(),closest.getLocation().getZ());
 				p.setCompassTarget(loc);
 			}
-			current = 15000;
+			current = 25000;
 		}
 		
 		Location closestl = null;
 		for (Player p : HideAndSeek.hiders) {
-			for (Location l : HideAndSeek.chestsave.keySet()) {
-				if(p.getLocation().distanceSquared(l) <= current && HideAndSeek.chestsave.get(l) == true) {
-					current = p.getLocation().distanceSquared(l);
-					closestl = l;
+			for (Player p2 : HideAndSeek.seekers) {
+				if(p.getLocation().distanceSquared(p2.getLocation()) <= current) {
+					current = p.getLocation().distanceSquared(p2.getLocation());
+					closestl = p2.getLocation();
 				}
 				
 			}
